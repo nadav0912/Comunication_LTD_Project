@@ -383,7 +383,7 @@ doing it as a block with someone who can change AWS settings in the same minute.
 
 ## Phase 6 — Secure hardening and regression
 
-### - [ ] T13: `secure/tests/attacks.test.js` + leak checks
+### - [x] T13: `secure/tests/attacks.test.js` + leak checks — DONE (live-verified)
 
 **Description:** The negative half of the asymmetric suite (§12). Send the §10 payloads as raw HTTP
 and assert they fail. Add the SC13 leak assertions and the SC14 static check that no SQL string in
