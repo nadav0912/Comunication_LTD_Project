@@ -1,7 +1,7 @@
 'use strict';
 
 // T6/T7/T8 — auth API (register, login, lockout). Runs against the tree's own database
-// (secure_app_db) via --env-file=.env.test. No TRUNCATE (plan A6): every fixture is prefixed
+// (secure_app_db) via --env-file=.env.test. No table-wipes (plan A6): every fixture is prefixed
 // `__test_<runId>_` and removed in after(); assertions scope to the rows this run created.
 
 const test = require('node:test');
