@@ -126,22 +126,23 @@ no I/O, no database — buildable in parallel with T1–T3.
 
 ---
 
-### - [ ] T5: `services/passwordPolicy.js` + `config.json` + dictionary
+### - [x] T5: `services/passwordPolicy.js` + `config.json` + dictionary — DONE (commit pending)
 
 **Description:** Load `config.json` on **every** validation call (plan A5 — no mtime cache) and
 enforce the five rules in §7, returning `{ valid, errors: [...] }` with **all** violations at once.
-Ship `data/common-passwords.txt` (~1,000 entries). Includes the A1 proof test: rewrite `config.json`
-with `passwordLength: 14` at runtime and assert a 12-char password now fails, with no restart.
+Ship `data/common-passwords.txt` (~250 entries; expandable — see summary/Q5). Includes the A1 proof
+test: rewrite `config.json` with `passwordLength: 14` at runtime and assert a 12-char password now
+fails, with no restart.
 
 **Acceptance criteria:**
-- [ ] Each of `passwordLength`, the four `complexity` flags, and `blockDictionaryWords` rejects independently and reports its own error string
-- [ ] A password violating three rules returns three errors in one response
-- [ ] Setting `complexity.requireSpecialChars: false` makes a previously-rejected password pass — no code change, no restart
-- [ ] `historyCount` and `maxLoginAttempts` are exposed via `policy()` for T8/T10 to consume
+- [x] Each of `passwordLength`, the four `complexity` flags, and `blockDictionaryWords` rejects independently and reports its own error string
+- [x] A password violating three rules returns three errors in one response
+- [x] Setting `complexity.requireSpecialChars: false` makes a previously-rejected password pass — no code change, no restart
+- [x] `historyCount` and `maxLoginAttempts` are exposed via `policy()` for T8/T10 to consume
 
 **Verification:**
-- [ ] `node --test --env-file=.env.test tests/password-policy.test.js`
-- [ ] Manual: edit `config.json` → `passwordLength: 14` while the server runs, POST a 12-char password, get a rejection (SC7)
+- [x] `node --test tests/password-policy.test.js` — 8/8 pass, incl. A1/SC7; config.json restored intact
+- [ ] Manual (browser, at C′): edit `config.json` → `passwordLength: 14`, POST a 12-char password, get a rejection (SC7)
 
 **Dependencies:** None (T1 for the tree to exist)
 **Files:** `secure/services/passwordPolicy.js`, `secure/config.json`, `secure/data/common-passwords.txt`, `secure/tests/password-policy.test.js`
