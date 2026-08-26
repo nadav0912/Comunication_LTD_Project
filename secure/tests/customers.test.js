@@ -67,3 +67,16 @@ test('missing name returns 400', async () => {
   const { agent } = await authedAgent('noname');
   await agent.post('/api/customers').send({ email: 'a@ex.com' }).expect(400);
 });
+
+test('GET /api/customers?search= filters by name', async () => {
+  const { agent } = await authedAgent('search');
+  const unique = cname('needle' + Math.random().toString(36).slice(2, 6));
+  await agent.post('/api/customers').send({ name: unique }).expect(201);
+
+  const hit = await agent.get('/api/customers?search=' + encodeURIComponent(unique));
+  assert.equal(hit.status, 200);
+  assert.ok(hit.body.some((c) => c.name === unique));
+
+  const miss = await agent.get('/api/customers?search=' + encodeURIComponent(cname('zzz_no_such')));
+  assert.ok(!miss.body.some((c) => c.name === unique));
+});
