@@ -1,0 +1,13 @@
+/* Comunication_LTD — shared page styles. Bootstrap 5 (CDN) does the heavy lifting; this is trim. */
+
+body {
+  min-height: 100vh;
+}
+
+main.container {
+  margin-inline: auto;
+}
+
+#errors ul {
+  padding-left: 1.1rem;
+}
