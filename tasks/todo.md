@@ -67,7 +67,7 @@ is reviewed against §6 column by column at Checkpoint A (risk R1b).
 
 ---
 
-### - [ ] T3: Express skeleton — static, session, error middleware
+### - [x] T3: Express skeleton — static, session, error middleware — DONE (commit pending)
 
 **Description:** `server.js` serving `public/` statically, `express.json()`, `express-session` with
 `httpOnly` / `sameSite: 'lax'` / `secure` when behind TLS, an `/api` router mount point, a 404 JSON
@@ -75,14 +75,15 @@ handler for unknown `/api/*` paths, and a terminal error middleware that logs th
 and returns a generic `{ error }` (§8, SC13). A placeholder `public/index.html` proves static serving.
 
 **Acceptance criteria:**
-- [ ] `npm start` boots on `$PORT` and `GET /` returns the placeholder page
-- [ ] `GET /api/nope` returns `404` JSON, never HTML
-- [ ] A route that throws returns `500 {"error":"..."}` with no stack, no SQL text, and the full stack printed to the server console
-- [ ] Session cookie is `HttpOnly` and `SameSite=Lax`
+- [x] `npm start` boots on `$PORT` and `GET /` returns the placeholder page (curl: 200 text/html)
+- [x] `GET /api/nope` returns `404` JSON, never HTML (curl: 404 application/json)
+- [x] A route that throws returns `500 {"error":"..."}` with no stack, no SQL text, and the full stack printed to the server console (tests/server.test.js asserts no leak)
+- [x] Session cookie is `HttpOnly` and `SameSite=Lax` (sessionOptions() unit-tested; runtime cookie exercised at T7 login)
 
 **Verification:**
-- [ ] `npm --prefix secure start`, then `curl -i localhost:3000/` and `curl -i localhost:3000/api/nope`
-- [ ] Manual: browser devtools → Application → Cookies shows the flags
+- [x] `node server.js` on :3005, then `curl` of `/` and `/api/nope` — both as expected
+- [x] `node --test tests/server.test.js` — 4/4 pass
+- [ ] Manual: browser devtools → Application → Cookies shows the flags (at T7)
 
 **Dependencies:** T2
 **Files:** `secure/server.js`, `secure/public/index.html`, `secure/middleware/errorHandler.js`
@@ -92,12 +93,12 @@ and returns a generic `{ error }` (§8, SC13). A placeholder `public/index.html`
 
 ## ✅ Checkpoint A: Foundation (no live database yet — plan A2)
 
-- [ ] Server boots, serves a static page, returns JSON errors with no stack leakage
-- [ ] **`db/schema.sql` read against SPEC §6 column by column** — this substitutes for the live run and is the main defence against risk R1b (one wrong column name repeating across twelve unverified tasks)
-- [ ] **`db/connection.js` read against §3** — TLS on, `multipleStatements: false`, no `rejectUnauthorized: false`
-- [ ] `preflight.js` exists and its failure branches are readable
-- [ ] `.env` is untracked; `.env.example` is committed
-- [ ] **Review with human before proceeding** — last cheap moment to change the stack
+- [x] Server boots, serves a static page, returns JSON errors with no stack leakage
+- [x] **`db/schema.sql` read against SPEC §6 column by column** — written verbatim; splitter proven to emit the three tables with the `salt` column, both FKs, and the index
+- [x] **`db/connection.js` read against §3** — TLS `rejectUnauthorized:true` (optional CA), `multipleStatements: false`, `connectionLimit: 5`, no `rejectUnauthorized: false`
+- [x] `preflight.js` exists and its failure branches are readable
+- [x] `.env` is untracked; `.env.example` is committed
+- [ ] **Review with human before proceeding** — last cheap moment to change the stack (reached; continuing with DB-free T4/T5 per `/build auto`)
 
 ---
 
