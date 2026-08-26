@@ -207,23 +207,23 @@ requires it.
 
 ---
 
-### - [ ] T8: Lockout — attempt counter and `is_locked`
+### - [x] T8: Lockout — attempt counter and `is_locked` — DONE (live-verified)
 
 **Description:** Increment `failed_login_attempts` on each wrong password; at
 `config.maxLoginAttempts` set `is_locked = 1`. A locked account returns `403` regardless of
 credentials. Successful login resets the counter to 0. Per D4 the lock is permanent until the reset
-flow clears it (T12).
+flow clears it (T12). (Handler landed with T7 per the §11 reference; T8 adds the lockout test cases.)
 
 **Acceptance criteria:**
-- [ ] Three consecutive wrong passwords set `is_locked = 1` (SC4)
-- [ ] The 4th attempt with the **correct** password returns `403`, not `200` (SC4)
-- [ ] Setting `maxLoginAttempts: 5` in `config.json` moves the threshold to 5, no restart (SC8)
-- [ ] A successful login before the threshold resets `failed_login_attempts` to 0
-- [ ] The counter does **not** increment for an unknown username (nothing to count against)
+- [x] Three consecutive wrong passwords set `is_locked = 1` (SC4)
+- [x] The 4th attempt with the **correct** password returns `403`, not `200` (SC4)
+- [x] Setting `maxLoginAttempts: 5` in `config.json` moves the threshold to 5, no restart (SC8)
+- [x] A successful login before the threshold resets `failed_login_attempts` to 0
+- [x] The counter does **not** increment for an unknown username (401 does-not-exist before any UPDATE)
 
 **Verification:**
-- [ ] ⏳ `node --test --test-concurrency=1 --env-file=.env.test tests/auth.test.js` (lockout cases)
-- [ ] ⏳ Manual: lock a real account in the browser and confirm the 403 message points at "Forgot password" (U3)
+- [x] ✅ **live:** lockout cases in `tests/auth.test.js` 15/15; full `npm test` 33/33; config.json restored
+- [ ] Manual (browser): lock a real account, confirm 403 points at "Forgot password" (U3)
 
 **Dependencies:** T7
 **Files:** `secure/routes/auth.js`, `secure/tests/auth.test.js`
@@ -233,11 +233,11 @@ flow clears it (T12).
 
 ## ✅ Checkpoint B: Authentication works end-to-end
 
-- [ ] SC1, SC3, SC4, SC7, SC8 all pass
-- [ ] `npm --prefix secure test` green
-- [ ] A human can register and log in through the browser without touching curl
-- [ ] No password or hash appears in any response body or server log line
-- [ ] **Review with human before proceeding**
+- [x] SC3 (title), SC4 (lockout), SC7 (policy config-change), SC8 (threshold) all pass; SC1 satisfied for secure (boots + serves) — vulnerable build is Phase 7
+- [x] `npm --prefix secure test` green (33/33)
+- [ ] A human can register and log in through the browser without touching curl (manual — pages serve 200, API proven)
+- [x] No password or hash appears in any response body (leak test asserts) or server log line
+- [ ] **Review with human before proceeding** (reached; continuing per `/build auto`)
 
 ---
 

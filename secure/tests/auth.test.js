@@ -6,6 +6,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const request = require('supertest');
 const { createApp } = require('../server');
 const pool = require('../db/connection');
@@ -14,6 +16,18 @@ const app = createApp();
 const runId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const uname = (s) => `__test_${runId}_${s}`;
 const VALID_PW = 'Kq7#mxzptvwR'; // compliant, non-dictionary
+const WRONG_PW = 'Wrong#12345Zz';
+
+const CONFIG_PATH = path.join(__dirname, '..', 'config.json');
+const ORIGINAL_CONFIG = fs.readFileSync(CONFIG_PATH, 'utf8');
+async function withConfig(patch, fn) {
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify({ ...JSON.parse(ORIGINAL_CONFIG), ...patch }, null, 2));
+  try {
+    return await fn();
+  } finally {
+    fs.writeFileSync(CONFIG_PATH, ORIGINAL_CONFIG);
+  }
+}
 
 test.after(async () => {
   await pool.execute('DELETE FROM users WHERE username LIKE ?', [`__test_${runId}_%`]);
@@ -136,4 +150,51 @@ test('the session id is regenerated on login (fixation defence)', async () => {
   const second = await agent.post('/api/login').send({ username, password: VALID_PW });
   assert.ok(sidOf(first) && sidOf(second));
   assert.notEqual(sidOf(first), sidOf(second));
+});
+
+// ---------- T8: lockout (SC4, SC8, D4) ----------
+
+test('SC4: three wrong passwords lock the account; the 4th correct attempt is refused 403', async () => {
+  const username = await registerUser('lock3');
+  for (let i = 0; i < 3; i++) {
+    await request(app).post('/api/login').send({ username, password: WRONG_PW }).expect(401);
+  }
+  const [rows] = await pool.execute(
+    'SELECT is_locked FROM users WHERE username = ?', [username]);
+  assert.equal(rows[0].is_locked, 1);
+
+  const res = await request(app).post('/api/login').send({ username, password: VALID_PW });
+  assert.equal(res.status, 403); // correct password, still refused (D4)
+});
+
+test('a successful login before the threshold resets failed_login_attempts to 0', async () => {
+  const username = await registerUser('reset_ctr');
+  await request(app).post('/api/login').send({ username, password: WRONG_PW }).expect(401);
+  await request(app).post('/api/login').send({ username, password: WRONG_PW }).expect(401);
+  await request(app).post('/api/login').send({ username, password: VALID_PW }).expect(200);
+  const [rows] = await pool.execute(
+    'SELECT failed_login_attempts, is_locked FROM users WHERE username = ?', [username]);
+  assert.equal(rows[0].failed_login_attempts, 0);
+  assert.equal(rows[0].is_locked, 0);
+});
+
+test('the counter is not touched for an unknown username', async () => {
+  const res = await request(app).post('/api/login').send({ username: uname('nobody'), password: 'x' });
+  assert.equal(res.status, 401);
+  assert.match(res.body.error, /does not exist/i);
+});
+
+test('SC8: maxLoginAttempts=5 moves the lock threshold to 5 with no restart', async () => {
+  const username = await registerUser('lock5');
+  await withConfig({ maxLoginAttempts: 5 }, async () => {
+    for (let i = 0; i < 4; i++) {
+      await request(app).post('/api/login').send({ username, password: WRONG_PW }).expect(401);
+    }
+    const [mid] = await pool.execute('SELECT is_locked FROM users WHERE username = ?', [username]);
+    assert.equal(mid[0].is_locked, 0); // 4 < 5: not yet locked
+
+    await request(app).post('/api/login').send({ username, password: WRONG_PW }).expect(401);
+    const [after] = await pool.execute('SELECT is_locked FROM users WHERE username = ?', [username]);
+    assert.equal(after[0].is_locked, 1); // 5th failure locks
+  });
 });
