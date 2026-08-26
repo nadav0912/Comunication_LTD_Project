@@ -9,17 +9,8 @@
 // `multipleStatements` stays false in BOTH builds (SPEC §13): the vulnerable build's SQLi demo
 // relies on `OR '1'='1'` and UNION, never on stacked statements, so there is no reason to enable it.
 
-const fs = require('fs');
 const mysql = require('mysql2/promise');
-
-function sslConfig() {
-  if (process.env.DB_SSL !== 'true') return undefined;
-  const config = { rejectUnauthorized: true };
-  if (process.env.DB_SSL_CA) {
-    config.ca = fs.readFileSync(process.env.DB_SSL_CA);
-  }
-  return config;
-}
+const { sslConfig } = require('./ssl');
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
