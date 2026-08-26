@@ -306,7 +306,7 @@ is always the newest history row — so step 3 needs no special case for "the pa
 
 ## Phase 5 — Password reset (U6)
 
-### - [ ] T11: Forgot slice — mailer + token issuance
+### - [x] T11: Forgot slice — mailer + token issuance — DONE (issuance live; real email needs Gmail)
 
 **Description:** `services/mailer.js` (nodemailer, Gmail SMTP from `.env`) and `POST /api/forgot`:
 look up by email, generate `sha1(randomBytes(20))`, store it in `reset_token` with
