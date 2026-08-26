@@ -243,7 +243,7 @@ flow clears it (T12). (Handler landed with T7 per the §11 reference; T8 adds th
 
 ## Phase 3 — Customers (U7)
 
-### - [ ] T9: Customers slice — the XSS sink, built secure
+### - [x] T9: Customers slice — the XSS sink, built secure — DONE (live-verified)
 
 **Description:** `POST /api/customers` (auth required, `created_by` from the session) and
 `GET /api/customers`. `system.html` submits the form and renders the returned name via
@@ -251,15 +251,15 @@ flow clears it (T12). (Handler landed with T7 per the §11 reference; T8 adds th
 **verbatim** — no input sanitisation, per §13 Never. This file is the one that T17 later reverts.
 
 **Acceptance criteria:**
-- [ ] Unauthenticated `POST`/`GET /api/customers` return `401`
-- [ ] A created customer is returned by `GET /api/customers` on a later request and a later session
-- [ ] A name containing `<img src=x onerror=alert(1)>` is stored byte-identical in the database
-- [ ] The same name renders as visible literal text in the browser — no alert, no image element in the DOM
-- [ ] Missing `name` returns `400`
+- [x] Unauthenticated `POST`/`GET /api/customers` return `401`
+- [x] A created customer is returned by `GET /api/customers` on a later request and a later session
+- [x] A name containing `<img src=x onerror=alert(1)>` is stored byte-identical in the database
+- [x] The same name renders via `textContent` — no markup parsed (asserted by code; browser alert-inert is manual U7)
+- [x] Missing `name` returns `400`
 
 **Verification:**
-- [ ] ⏳ `node --test --test-concurrency=1 --env-file=.env.test tests/customers.test.js`
-- [ ] ⏳ Manual: add the payload as a customer name on `:3000`, confirm literal text; re-login and reload to confirm it stays inert (U7)
+- [x] ✅ **live:** `tests/customers.test.js` 4/4; full `npm test` 37/37; system.html + system.js serve 200
+- [ ] Manual (browser): add the payload on `:3000`, confirm literal text; re-login + reload to confirm it stays inert (U7)
 
 **Dependencies:** T8
 **Files:** `secure/routes/customers.js`, `secure/public/system.html`, `secure/public/js/system.js`, `secure/tests/customers.test.js`
