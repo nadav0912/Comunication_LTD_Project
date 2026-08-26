@@ -406,7 +406,7 @@ and assert they fail. Add the SC13 leak assertions and the SC14 static check tha
 
 ---
 
-### - [ ] T14: Seed, final scripts, ESLint
+### - [x] T14: Seed, final scripts, ESLint — DONE (live-verified)
 
 **Description:** `scripts/seed.js` creating one known demo user and a few benign customers (the R8
 escape hatch), `scripts/clean-tests.js` deleting `__test_%` leftovers (risk R4b), finalise every npm
