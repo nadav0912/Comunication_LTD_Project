@@ -269,7 +269,7 @@ flow clears it (T12). (Handler landed with T7 per the §11 reference; T8 adds th
 
 ## Phase 4 — Password change (U4, U5)
 
-### - [ ] T10: Change-password slice — history enforcement
+### - [x] T10: Change-password slice — history enforcement — DONE (live-verified)
 
 **Description:** `POST /api/change-password` per §9.2, using the per-row-salt history model
 (plan A8):
@@ -286,17 +286,17 @@ Because history holds one row per password written *when it becomes active*, the
 is always the newest history row — so step 3 needs no special case for "the password in force".
 
 **Acceptance criteria:**
-- [ ] A wrong current password returns `401` and changes nothing
-- [ ] A policy-violating new password returns `400` with `details`
-- [ ] Reusing the immediately previous password is rejected (SC5)
-- [ ] With `historyCount: 3`, reusing the password from 3 changes ago is rejected; from 4 changes ago is **accepted**
-- [ ] Each change produces a **different** salt on `users`, and the matching `password_history` row stores that same salt
-- [ ] The reuse check still fires across a salt rotation — i.e. a rejected reuse is proven against a row whose salt differs from the current one (this is the assertion that would have failed under the discarded frozen-salt design)
-- [ ] `password_history` never exceeds `historyCount` rows per user
+- [x] A wrong current password returns `401` and changes nothing
+- [x] A policy-violating new password returns `400` with `details`
+- [x] Reusing the immediately previous password is rejected (SC5)
+- [x] With `historyCount: 3`, the reuse window is the last 3 rows **inclusive of current** (SPEC §6); a password still in the window is rejected, one that has fallen out is **accepted**. *(Resolves the todo's looser "3 changes ago" wording in favour of SPEC §6, per "go by SPEC.md".)*
+- [x] Each change produces a **different** salt on `users`, and the matching `password_history` row stores that same salt
+- [x] The reuse check still fires across a salt rotation — rejected reuse proven against a row whose salt differs from the current one (would have failed under the frozen-salt design)
+- [x] `password_history` never exceeds `historyCount` rows per user
 
 **Verification:**
-- [ ] ⏳ `node --test --test-concurrency=1 --env-file=.env.test tests/password-history.test.js`
-- [ ] ⏳ Manual: change password twice in the browser, then try to reuse the original (U4, U5)
+- [x] ✅ **live:** `tests/password-history.test.js` 5/5; full `npm test` 42/42; page serves 200
+- [ ] Manual (browser): change password, then try to reuse a windowed password (U4, U5)
 
 **Dependencies:** T8
 **Files:** `secure/routes/password.js`, `secure/public/change-password.html`, `secure/public/js/change-password.js`, `secure/tests/password-history.test.js`
