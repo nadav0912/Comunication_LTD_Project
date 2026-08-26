@@ -181,7 +181,7 @@ lists policy violations returned by the server; the client does **no** validatio
 
 ## Phase 2 — Login and lockout (U2, U3)
 
-### - [ ] T7: Login slice — login, logout, `/api/me`, `requireAuth`
+### - [x] T7: Login slice — login, logout, `/api/me`, `requireAuth` — DONE (live-verified)
 
 **Description:** `POST /api/login` per the §11 reference snippet, `POST /api/logout`,
 `GET /api/me`, and the `requireAuth` middleware. Session id is regenerated on login (session
@@ -190,16 +190,16 @@ fixation). `index.html` is the login page titled exactly **"Comunication_LTD Inf
 requires it.
 
 **Acceptance criteria:**
-- [ ] Correct credentials return `200 {username}` and set a session cookie
-- [ ] Unknown username returns `401` with the distinct "does not exist" message (D1)
-- [ ] Wrong password returns `401` with a distinct message
-- [ ] `GET /api/me` returns `401` without a session and `200 {username}` with one
-- [ ] Logout returns `204` and a subsequent `/api/me` is `401`
-- [ ] The session id after login differs from the pre-login one
+- [x] Correct credentials return `200 {username}` and set a session cookie
+- [x] Unknown username returns `401` with the distinct "does not exist" message (D1)
+- [x] Wrong password returns `401` with a distinct message
+- [x] `GET /api/me` returns `401` without a session and `200 {username}` with one
+- [x] Logout returns `204` and a subsequent `/api/me` is `401`
+- [x] The session id after login differs (regenerated) — asserted across two logins on one agent
 
 **Verification:**
-- [ ] ⏳ `node --test --test-concurrency=1 --env-file=.env.test tests/auth.test.js` (login cases, using `supertest.agent()` per R10)
-- [ ] Manual, no database needed: open `index.html` and confirm the title string exactly matches SC3
+- [x] ✅ **live:** `tests/auth.test.js` 11/11 (login cases use `supertest.agent()` per R10); full `npm test` 29/29
+- [x] `index.html` `<title>` is byte-exact `Comunication_LTD Information System` (SC3)
 
 **Dependencies:** T6
 **Files:** `secure/routes/auth.js`, `secure/middleware/requireAuth.js`, `secure/public/index.html`, `secure/public/js/login.js`, `secure/tests/auth.test.js`
