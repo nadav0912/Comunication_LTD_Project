@@ -72,6 +72,27 @@
     toLogin();
   });
 
+  // Customer search (the GET /api/customers?search= path; secure renders results with textContent).
+  const searchInput = document.getElementById('cust-search');
+  async function runSearch() {
+    const term = searchInput.value.trim();
+    if (!term) return loadCustomers();
+    try {
+      renderList(await window.api.get('/api/customers?search=' + encodeURIComponent(term)));
+    } catch (err) {
+      if (err.status === 401) return toLogin();
+      showError(err.message);
+    }
+  }
+  document.getElementById('search-btn').addEventListener('click', runSearch);
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    searchInput.value = '';
+    loadCustomers();
+  });
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); runSearch(); }
+  });
+
   // On load: require a session, then render the stored list (payloads persist and re-fire here).
   (async () => {
     try {
