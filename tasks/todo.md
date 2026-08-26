@@ -150,7 +150,7 @@ fails, with no restart.
 
 ---
 
-### - [ ] T6: Register slice — `POST /api/register` + page
+### - [x] T6: Register slice — `POST /api/register` + page — DONE (live-verified)
 
 **Description:** First vertical slice: API + page + client JS + test. Validate policy → generate
 salt → HMAC → insert user → insert the **same `(hash, salt)` pair** as the first `password_history`
@@ -160,16 +160,18 @@ lists policy violations returned by the server; the client does **no** validatio
 "field is non-empty" (§2 — client validation is UX, and the tests prove enforcement is server-side).
 
 **Acceptance criteria:**
-- [ ] `POST /api/register` returns `201 {id, username}` and the row exists with a 64-char hash and a 32-char salt
-- [ ] A policy-violating password returns `400` with `details: [...]`, and **no** user row is created
-- [ ] A duplicate username returns `409`
-- [ ] `password_history` has exactly one row for the new user, and its `(password_hash, salt)` equals the pair on `users`
-- [ ] Test fixtures use the `__test_<runId>_` username prefix and are removed in `after()` — no `TRUNCATE` (plan A6)
-- [ ] `curl` bypassing the browser is rejected identically — proving server-side enforcement
+- [x] `POST /api/register` returns `201 {id, username}` and the row exists with a 64-char hash and a 32-char salt
+- [x] A policy-violating password returns `400` with `details: [...]`, and **no** user row is created
+- [x] A duplicate username returns `409`
+- [x] `password_history` has exactly one row for the new user, and its `(password_hash, salt)` equals the pair on `users`
+- [x] Test fixtures use the `__test_<runId>_` username prefix and are removed in `after()` — no `TRUNCATE` (plan A6); verified 0 leftover rows
+- [x] `supertest` calls the API directly (bypassing the browser) and enforcement holds — server-side proven
 
 **Verification:**
-- [ ] ⏳ `node --test --test-concurrency=1 --env-file=.env.test tests/auth.test.js` (register cases)
-- [ ] ⏳ Manual: register in the browser at `/register.html`, see the error list, then succeed (U1)
+- [x] ✅ **live against RDS:** `tests/auth.test.js` register cases 5/5; full `npm test` 23/23
+- [ ] Manual (browser): register at `/register.html`, see the error list, then succeed (U1) — page + assets serve 200; needs a human browser
+
+**Note:** `npm test` script changed `tests/` → `tests/*.test.js` — the directory arg fails on this Node/Windows (treated as a module); glob preserves the spec's intent.
 
 **Dependencies:** T3, T4, T5
 **Files:** `secure/routes/auth.js`, `secure/public/register.html`, `secure/public/js/register.js`, `secure/public/js/api.js`, `secure/tests/auth.test.js`

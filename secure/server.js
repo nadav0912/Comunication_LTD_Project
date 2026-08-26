@@ -29,11 +29,11 @@ function createApp() {
   app.use(express.json());
   app.use(session(sessionOptions()));
 
-  // API router — feature routes attach here from T6 onward.
+  // API router — feature routes attach here.
   const api = express.Router();
-  // api.use('/', require('./routes/auth'));       // T6/T7/T8
-  // api.use('/', require('./routes/password'));    // T10/T11/T12
-  // api.use('/', require('./routes/customers'));   // T9
+  api.use('/', require('./routes/auth'));           // register/login/logout (T6/T7/T8)
+  // api.use('/', require('./routes/password'));     // T10/T11/T12
+  // api.use('/', require('./routes/customers'));    // T9
   app.use('/api', api);
 
   // Unknown /api/* paths return JSON, never the static 404 HTML.
