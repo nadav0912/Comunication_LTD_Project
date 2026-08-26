@@ -84,3 +84,76 @@ test('T11: an SMTP failure returns 500, leaks no credentials, and leaves no half
     installStub();
   }
 });
+
+// ---------- T12: reset / redemption + unlock ----------
+
+async function issueToken(userId, email) {
+  await request(app).post('/api/forgot').send({ email }).expect(200);
+  const [rows] = await pool.execute('SELECT reset_token FROM users WHERE id = ?', [userId]);
+  return rows[0].reset_token;
+}
+const login = (username, password) => request(app).post('/api/login').send({ username, password });
+
+test('T12: a valid, unexpired token with a compliant password resets and enables login', async () => {
+  const { username, userId, email } = await newUser('reset_ok');
+  const token = await issueToken(userId, email);
+  const res = await request(app).post('/api/reset').send({ token, newPassword: P_NEW });
+  assert.equal(res.status, 200);
+  assert.deepEqual(res.body, { ok: true });
+
+  await login(username, P_NEW).expect(200);         // new password works
+  await login(username, P0).expect(401);            // old password no longer works
+  const [rows] = await pool.execute('SELECT reset_token FROM users WHERE id = ?', [userId]);
+  assert.equal(rows[0].reset_token, null);          // token consumed
+});
+
+test('T12: an expired token returns 400 and the password is unchanged', async () => {
+  const { username, userId, email } = await newUser('reset_expired');
+  const token = await issueToken(userId, email);
+  await pool.execute('UPDATE users SET reset_token_expires = TIMESTAMPADD(MINUTE, -1, NOW()) WHERE id = ?', [userId]);
+  const res = await request(app).post('/api/reset').send({ token, newPassword: P_NEW });
+  assert.equal(res.status, 400);
+  await login(username, P0).expect(200);            // original password still valid
+});
+
+test('T12: an unknown or already-used token returns 400', async () => {
+  await request(app).post('/api/reset')
+    .send({ token: 'f'.repeat(40), newPassword: P_NEW }).expect(400);
+
+  const { userId, email } = await newUser('reset_used');
+  const token = await issueToken(userId, email);
+  await request(app).post('/api/reset').send({ token, newPassword: P_NEW }).expect(200);
+  await request(app).post('/api/reset').send({ token, newPassword: 'Hm9!kcrdfyGw' }).expect(400); // reused token
+});
+
+test('T12: a policy/history-violating new password returns 400 and does NOT consume the token', async () => {
+  const { username, userId, email } = await newUser('reset_weak');
+  const token = await issueToken(userId, email);
+  await request(app).post('/api/reset').send({ token, newPassword: 'weak' }).expect(400);
+
+  // token survives -> a compliant retry with the SAME token still works
+  const res = await request(app).post('/api/reset').send({ token, newPassword: P_NEW });
+  assert.equal(res.status, 200);
+  await login(username, P_NEW).expect(200);
+});
+
+test('T12: redeeming a token on a locked account unlocks it (SC4 tail)', async () => {
+  const { username, userId, email } = await newUser('reset_unlock');
+  await pool.execute('UPDATE users SET is_locked = 1, failed_login_attempts = 3 WHERE id = ?', [userId]);
+  await login(username, P0).expect(403);            // locked
+
+  const token = await issueToken(userId, email);
+  await request(app).post('/api/reset').send({ token, newPassword: P_NEW }).expect(200);
+
+  const [rows] = await pool.execute('SELECT is_locked, failed_login_attempts FROM users WHERE id = ?', [userId]);
+  assert.equal(rows[0].is_locked, 0);
+  assert.equal(rows[0].failed_login_attempts, 0);
+  await login(username, P_NEW).expect(200);         // unlocked + new password
+});
+
+test('T12: a reset that reuses a windowed password is rejected (shared history logic)', async () => {
+  const { userId, email } = await newUser('reset_reuse');
+  const token = await issueToken(userId, email);
+  const res = await request(app).post('/api/reset').send({ token, newPassword: P0 }); // P0 still in window
+  assert.equal(res.status, 400);
+});

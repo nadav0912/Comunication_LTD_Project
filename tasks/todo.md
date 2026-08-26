@@ -329,7 +329,7 @@ the stored value are the same — the brief requires it; the report says why tha
 
 ---
 
-### - [ ] T12: Reset slice — token redemption and unlock
+### - [x] T12: Reset slice — token redemption and unlock — DONE (live-verified)
 
 **Description:** `POST /api/reset`: match the token, check expiry, apply policy **and history**
 (reusing T10's per-row-salt logic verbatim — one shared function, not a second copy), write the new

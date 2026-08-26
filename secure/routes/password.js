@@ -72,4 +72,37 @@ router.post('/forgot', async (req, res, next) => {
   }
 });
 
+// POST /api/reset (§9.5). Match an unexpired token, apply the SAME policy+history+salt logic as
+// change-password (shared changePassword — not a second copy), then clear the token and unlock the
+// account (is_locked=0, failed_login_attempts=0), closing the U3 -> U6 loop. If the new password
+// fails policy/history the token is NOT consumed, so the user can retry.
+router.post('/reset', async (req, res, next) => {
+  try {
+    const { token, newPassword } = req.body ?? {};
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token and new password are required.' });
+    }
+
+    const [rows] = await pool.execute(
+      'SELECT id FROM users WHERE reset_token = ? AND reset_token_expires > NOW() LIMIT 1',
+      [token],
+    );
+    const user = rows[0];
+    if (!user) return res.status(400).json({ error: 'Invalid or expired reset token.' });
+
+    const result = await changePassword(user.id, newPassword);
+    if (!result.ok) {
+      return res.status(result.status).json({ error: result.error, details: result.details });
+    }
+
+    await pool.execute(
+      'UPDATE users SET reset_token = NULL, reset_token_expires = NULL, is_locked = 0, failed_login_attempts = 0 WHERE id = ?',
+      [user.id],
+    );
+    return res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;
