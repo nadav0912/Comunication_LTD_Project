@@ -104,7 +104,7 @@ and returns a generic `{ error }` (§8, SC13). A placeholder `public/index.html`
 
 ## Phase 1 — Registration (U1, A1)
 
-### - [ ] T4: `services/crypto.js`
+### - [x] T4: `services/crypto.js` — DONE (commit pending)
 
 **Description:** The three primitives from §2/§9: `generateSalt()` → 16 random bytes hex;
 `hashPassword(password, salt)` → HMAC-SHA256 hex; `verifyPassword(password, salt, expectedHash)`
@@ -112,13 +112,13 @@ using `crypto.timingSafeEqual`; `generateResetToken()` → `sha1(randomBytes(20)
 no I/O, no database — buildable in parallel with T1–T3.
 
 **Acceptance criteria:**
-- [ ] `hashPassword` is deterministic for a fixed (password, salt) and returns 64 hex chars
-- [ ] Two `generateSalt()` calls differ; salt is 32 hex chars
-- [ ] `verifyPassword` returns false for a wrong password and does not throw on a length mismatch
-- [ ] `generateResetToken()` returns 40 hex chars and differs across calls
+- [x] `hashPassword` is deterministic for a fixed (password, salt) and returns 64 hex chars
+- [x] Two `generateSalt()` calls differ; salt is 32 hex chars
+- [x] `verifyPassword` returns false for a wrong password and does not throw on a length mismatch
+- [x] `generateResetToken()` returns 40 hex chars and differs across calls
 
 **Verification:**
-- [ ] `node --test --env-file=.env.test tests/crypto.test.js`
+- [x] `node --test tests/crypto.test.js` — 6/6 pass (no DB/env needed)
 
 **Dependencies:** None
 **Files:** `secure/services/crypto.js`, `secure/tests/crypto.test.js`
