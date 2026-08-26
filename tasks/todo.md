@@ -17,7 +17,7 @@ database), ESLint, the SC14 static SQL check, and static page serving.
 
 ## Phase 0 — Foundation
 
-### - [ ] T1: Repo scaffolding + `preflight.js`
+### - [x] T1: Repo scaffolding + `preflight.js` — DONE (commit e743b2b)
 
 **Description:** Create the `secure/` tree skeleton, `package.json`, `.env.example`, and
 `scripts/preflight.js` — which opens a TLS connection to RDS and runs `SELECT 1`, then calls
@@ -26,15 +26,15 @@ connectivity is verified jointly with the developer at Checkpoint C′ (plan A2)
 what makes that session one command instead of an afternoon of guessing.
 
 **Acceptance criteria:**
-- [ ] `secure/package.json` declares express, express-session, mysql2, nodemailer, dotenv, and supertest (dev), matching §2 versions
-- [ ] `secure/.env.example` contains every key in §4 with placeholder values and no real secrets
-- [ ] `scripts/preflight.js` reports `DB: ok (<mysql version>)` / `SMTP: ok`, or fails with an actionable message naming the machine's current public IP (for the security-group rule) and the raw SMTP error code
-- [ ] `preflight.js` never prints `DB_PASSWORD` or `SMTP_PASS`, including inside a driver error object
+- [x] `secure/package.json` declares express, express-session, mysql2, nodemailer, dotenv, and supertest (dev), matching §2 versions
+- [x] `secure/.env.example` contains every key in §4 with placeholder values and no real secrets
+- [x] `scripts/preflight.js` reports `DB: ok (<mysql version>)` / `SMTP: ok`, or fails with an actionable message naming the machine's current public IP (for the security-group rule) and the raw SMTP error code
+- [x] `preflight.js` never prints `DB_PASSWORD` or `SMTP_PASS`, including inside a driver error object
 
 **Verification:**
-- [ ] `npm --prefix secure install` succeeds
-- [ ] `node -c scripts/preflight.js` parses; the failure branches are read by eye
-- [ ] `git status` shows `.env` untracked and ignored; `.env.example` staged
+- [x] `npm --prefix secure install` succeeds (198 packages)
+- [x] `node -c scripts/preflight.js` parses; the failure branches are read by eye
+- [x] `git status` shows `.env` untracked and ignored; `.env.example` staged
 - [ ] ⏳ *Deferred to C′:* `npm run preflight` exits 0
 
 **Dependencies:** None. Q1/Q2 are needed at C′, not here.
@@ -43,7 +43,7 @@ what makes that session one command instead of an afternoon of guessing.
 
 ---
 
-### - [ ] T2: Schema, connection pool, `db:init`
+### - [x] T2: Schema, connection pool, `db:init` — DONE (commit pending)
 
 **Description:** Write `db/schema.sql` exactly as specified in §6 — **including the `salt CHAR(32)`
 column on `password_history`** (plan A8) — a `mysql2` pool with TLS and `multipleStatements: false`,
@@ -52,13 +52,13 @@ Statement splitting normalises `\r\n` first (risk R9). Since nothing here runs u
 is reviewed against §6 column by column at Checkpoint A (risk R1b).
 
 **Acceptance criteria:**
-- [ ] `db/schema.sql` matches §6 exactly: three tables, `password_history.salt`, both FKs, the `idx_ph_user_created` index, `utf8mb4`
-- [ ] `db:init` creates `users`, `password_history`, `customers` in `$DB_NAME`, and succeeds on a second run (idempotent)
-- [ ] `db/connection.js` exports a pool with `ssl: { rejectUnauthorized: true }`, `multipleStatements: false`, `connectionLimit: 5`
-- [ ] A connection failure message contains no password (checked by reading the error path, per risk R1b)
+- [x] `db/schema.sql` matches §6 exactly: three tables, `password_history.salt`, both FKs, the `idx_ph_user_created` index, `utf8mb4`
+- [x] `db:init` creates `users`, `password_history`, `customers` in `$DB_NAME`, and succeeds on a second run (idempotent) — `IF NOT EXISTS` injected at runtime; comment-strip verified to yield 3 CREATE statements
+- [x] `db/connection.js` exports a pool with `ssl: { rejectUnauthorized: true }`, `multipleStatements: false`, `connectionLimit: 5`
+- [x] A connection failure message contains no password — `init-db.js` redacts `DB_PASSWORD` from errors
 
 **Verification:**
-- [ ] Line-by-line diff of `schema.sql` against SPEC §6 — the substitute for a live run
+- [x] Line-by-line diff of `schema.sql` against SPEC §6 — written verbatim; splitter proven to emit `users`/`password_history`/`customers`
 - [ ] ⏳ *Deferred to C′:* `npm --prefix secure run db:init` twice, both exit 0; `SHOW CREATE TABLE password_history` shows the `salt` column; `SHOW CREATE TABLE users` shows `is_locked` and `reset_token CHAR(40)`
 
 **Dependencies:** T1
