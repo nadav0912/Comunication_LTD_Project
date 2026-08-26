@@ -11,19 +11,13 @@ require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const { sslConfig } = require('../db/ssl');
 
 const DB_PASSWORD = process.env.DB_PASSWORD;
 
 function redact(text) {
   const out = String(text);
   return DB_PASSWORD ? out.split(DB_PASSWORD).join('***') : out;
-}
-
-function sslConfig() {
-  if (process.env.DB_SSL !== 'true') return undefined;
-  const config = { rejectUnauthorized: true };
-  if (process.env.DB_SSL_CA) config.ca = fs.readFileSync(process.env.DB_SSL_CA);
-  return config;
 }
 
 function loadStatements() {

@@ -9,6 +9,7 @@
 require('dotenv').config();
 const mysql = require('mysql2/promise');
 const nodemailer = require('nodemailer');
+const { sslConfig } = require('../db/ssl');
 
 // Any secret that must never reach the console, even inside a thrown driver error object.
 const SECRETS = [process.env.DB_PASSWORD, process.env.SMTP_PASS].filter(Boolean);
@@ -40,7 +41,7 @@ async function checkDb() {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       // Reachability only — do not select a schema, so this passes before db:init has run.
-      ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : undefined,
+      ssl: sslConfig(),
       connectTimeout: 10000,
     });
     const [rows] = await conn.query('SELECT VERSION() AS version');

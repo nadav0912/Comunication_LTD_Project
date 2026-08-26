@@ -35,7 +35,7 @@ what makes that session one command instead of an afternoon of guessing.
 - [x] `npm --prefix secure install` succeeds (198 packages)
 - [x] `node -c scripts/preflight.js` parses; the failure branches are read by eye
 - [x] `git status` shows `.env` untracked and ignored; `.env.example` staged
-- [ ] ⏳ *Deferred to C′:* `npm run preflight` exits 0
+- [x] ⏳→✅ `npm run preflight` DB half verified live: **DB: ok (MySQL 8.4.9)** after adding the RDS CA bundle (SPEC §3 TLS fallback). SMTP half still pending Gmail (T11).
 
 **Dependencies:** None. Q1/Q2 are needed at C′, not here.
 **Files:** `secure/package.json`, `secure/.env.example`, `secure/scripts/preflight.js`, `.gitignore`
@@ -59,7 +59,7 @@ is reviewed against §6 column by column at Checkpoint A (risk R1b).
 
 **Verification:**
 - [x] Line-by-line diff of `schema.sql` against SPEC §6 — written verbatim; splitter proven to emit `users`/`password_history`/`customers`
-- [ ] ⏳ *Deferred to C′:* `npm --prefix secure run db:init` twice, both exit 0; `SHOW CREATE TABLE password_history` shows the `salt` column; `SHOW CREATE TABLE users` shows `is_locked` and `reset_token CHAR(40)`
+- [x] ⏳→✅ **Verified live against RDS** (`secure_app_db`): `db:init` twice both exit 0 (idempotent); `password_history.salt CHAR(32)` present; `users.is_locked TINYINT(1)`, `reset_token CHAR(40)` present; `idx_ph_user_created` present
 
 **Dependencies:** T1
 **Files:** `secure/db/schema.sql`, `secure/db/connection.js`, `secure/scripts/init-db.js`, `secure/package.json`
