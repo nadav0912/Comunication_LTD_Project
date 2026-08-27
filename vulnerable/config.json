@@ -1,0 +1,12 @@
+{
+  "passwordLength": 10,
+  "complexity": {
+    "requireUppercase": true,
+    "requireLowercase": true,
+    "requireDigits": true,
+    "requireSpecialChars": true
+  },
+  "historyCount": 3,
+  "blockDictionaryWords": true,
+  "maxLoginAttempts": 3
+}

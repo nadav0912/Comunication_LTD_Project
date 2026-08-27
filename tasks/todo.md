@@ -443,7 +443,7 @@ open question Q3 says so.*
 
 ## Phase 7 — Vulnerable twin
 
-### - [ ] T15: Derive `vulnerable/` from `secure/`
+### - [x] T15: Derive `vulnerable/` from `secure/` — DONE (live-verified)
 
 **Description:** Copy the whole `secure/` tree to `vulnerable/` (excluding `node_modules` and
 `.env`), then change only the environment: port 3001, `DB_NAME=comm_ltd_vulnerable`. Install and
