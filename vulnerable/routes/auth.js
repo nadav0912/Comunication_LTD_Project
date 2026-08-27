@@ -1,8 +1,12 @@
 'use strict';
 
 // Auth routes (SPEC.md §5.1/§5.3, §9.1/§9.3). JSON only — never returns HTML.
-// SECURE build: every query uses pool.execute(sql, params) — input travels as a bound parameter and
-// can never be parsed as SQL. This is the file the vulnerable twin reverts to string concatenation.
+//
+// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+// VULNERABLE build: the login queries concatenate the username straight into the SQL text via
+// pool.query(), so `' OR '1'='1' -- ` rewrites the WHERE clause. The secure twin uses
+// pool.execute(sql, params) instead. multipleStatements stays false (db/connection.js), so the demo
+// relies on OR/UNION, never stacked statements.
 
 const express = require('express');
 const pool = require('../db/connection');
@@ -57,11 +61,13 @@ router.post('/register', async (req, res, next) => {
   }
 });
 
-// POST /api/login (§9.3, §11 reference). Parameterized lookup. Deviation D1: an unknown username is
-// reported distinctly ("User does not exist.") because the brief requires it — the report notes the
-// safe alternative. On a wrong password the failed-attempt counter is bumped and the account locks
-// at config.maxLoginAttempts (§6 lockout, exercised by T8). On success the counter resets and the
-// session id is regenerated (fixation defence).
+// POST /api/login (§9.3, §10.2). Deviation D1: an unknown username is reported distinctly.
+//
+// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+// Because passwords are salted per user, the credential check is a SECOND concatenated query
+// (username + password_hash). The trailing `-- ` in `' OR '1'='1' -- ` comments out the
+// ` AND password_hash = '...'` condition, so ANY password authenticates and login is bypassed.
+// The lockout counter still works for a genuine wrong password (both queries are string-built).
 router.post('/login', async (req, res, next) => {
   try {
     const { username, password } = req.body ?? {};
@@ -69,9 +75,9 @@ router.post('/login', async (req, res, next) => {
       return res.status(400).json({ error: 'Username and password are required.' });
     }
 
-    const [rows] = await pool.execute(
-      'SELECT id, password_hash, salt, failed_login_attempts, is_locked FROM users WHERE username = ?',
-      [username],
+    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !! (username concatenated into SQL)
+    const [rows] = await pool.query(
+      `SELECT id, salt, is_locked, failed_login_attempts FROM users WHERE username = '${username}'`,
     );
     const user = rows[0];
     if (!user) return res.status(401).json({ error: 'User does not exist.' }); // D1
@@ -80,20 +86,27 @@ router.post('/login', async (req, res, next) => {
       return res.status(403).json({ error: 'Account locked. Use "Forgot password" to unlock.' });
     }
 
-    if (!verifyPassword(password, user.salt, user.password_hash)) {
+    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+    // The password check lives in the SQL; `' OR '1'='1' -- ` comments out the password_hash clause.
+    const candidateHash = hashPassword(password, user.salt);
+    const [authRows] = await pool.query(
+      `SELECT id FROM users WHERE username = '${username}' AND password_hash = '${candidateHash}'`,
+    );
+
+    if (!authRows[0]) {
       const attempts = user.failed_login_attempts + 1;
       const locked = attempts >= policy().maxLoginAttempts ? 1 : 0;
-      await pool.execute(
-        'UPDATE users SET failed_login_attempts = ?, is_locked = ? WHERE id = ?',
-        [attempts, locked, user.id],
+      await pool.query(
+        `UPDATE users SET failed_login_attempts = ${attempts}, is_locked = ${locked} WHERE id = ${user.id}`,
       );
       return res.status(401).json({ error: 'Incorrect password.' });
     }
 
-    await pool.execute('UPDATE users SET failed_login_attempts = 0 WHERE id = ?', [user.id]);
+    const authedId = authRows[0].id;
+    await pool.query(`UPDATE users SET failed_login_attempts = 0 WHERE id = ${authedId}`);
     req.session.regenerate((err) => {
       if (err) return next(err);
-      req.session.userId = user.id;
+      req.session.userId = authedId;
       req.session.username = username;
       res.json({ username });
     });
