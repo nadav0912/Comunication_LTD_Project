@@ -3,10 +3,11 @@
 // Auth routes (SPEC.md §5.1/§5.3, §9.1/§9.3). JSON only — never returns HTML.
 //
 // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
-// VULNERABLE build: the login queries concatenate the username straight into the SQL text via
-// pool.query(), so `' OR '1'='1' -- ` rewrites the WHERE clause. The secure twin uses
+// VULNERABLE build: both the register and login queries concatenate user input straight into the SQL
+// text via pool.query(). In login, `' OR '1'='1' -- ` rewrites the WHERE clause (auth bypass); in
+// register, a crafted username breaks out of the INSERT's VALUES list (§1 SQLi). The secure twin uses
 // pool.execute(sql, params) instead. multipleStatements stays false (db/connection.js), so the demo
-// relies on OR/UNION, never stacked statements.
+// relies on OR/UNION/breakout, never stacked statements.
 
 const express = require('express');
 const pool = require('../db/connection');
@@ -36,14 +37,15 @@ router.post('/register', async (req, res, next) => {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
-      const [result] = await conn.execute(
-        'INSERT INTO users (username, email, password_hash, salt) VALUES (?, ?, ?, ?)',
-        [username, email, passwordHash, salt],
+      // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+      // username and email are concatenated into the INSERT, so a crafted username can break out of
+      // the VALUES list and control the stored columns (e.g. inject its own email / password_hash).
+      const [result] = await conn.query(
+        `INSERT INTO users (username, email, password_hash, salt) VALUES ('${username}', '${email}', '${passwordHash}', '${salt}')`,
       );
       const userId = result.insertId;
-      await conn.execute(
-        'INSERT INTO password_history (user_id, password_hash, salt) VALUES (?, ?, ?)',
-        [userId, passwordHash, salt],
+      await conn.query(
+        `INSERT INTO password_history (user_id, password_hash, salt) VALUES (${userId}, '${passwordHash}', '${salt}')`,
       );
       await conn.commit();
       return res.status(201).json({ id: userId, username });

