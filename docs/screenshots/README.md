@@ -21,6 +21,12 @@ Log in on each build (register a user, or use the seeded `demo` / `Comm7#Ltdxyz`
 | `05-xss-3001-alert.png` | On **:3001** system page, add a customer named `<img src=x onerror="alert(document.cookie)">` → capture the `alert` dialog that pops on submit. |
 | `06-xss-3001-persist.png` | Still on **:3001**: **log out**, log back in, land on the system page → capture the `alert` firing again on load (proves it is stored). |
 | `07-xss-3000-inert.png` | On **:3000**, add the same `<img …>` customer → capture it rendered as **literal grey text** in the list, with no alert. |
+| `08-sqli-register-3001-inject.png` | On **:3001** register page, in **Username** paste the breakout payload `backdoor', 'attacker@evil.com', '<hash>', '<salt>')#` (email `x@x.com`, password `Kq7#mxzptvwR`). Capture the DevTools **Payload** of the `register` request showing the breakout username. |
+| `08b-sqli-register-3001-backdoor-login.png` | (Optional punchline) On **:3001** login, enter `backdoor` / `Backdoor1!` → lands on the system page. The injected account works with a password you chose. |
+| `09-sqli-register-3000-safe.png` | On **:3000** login, enter `backdoor` / `Backdoor1!` → **"User does not exist." (401)**. Same payload was registered on secure, but no injected account exists — the input was bound, not parsed. (Note: register returns 201 on *both* builds; the tell is that the backdoor login fails on :3000.) |
+
+> The `<hash>`/`<salt>` in the payload make the account's password `Backdoor1!` — `<hash>` is
+> `HMAC('Backdoor1!', <salt>)`. Ask the tooling to compute it, or use the value in the demo.
 
 Tips:
 - Windows: `Win+Shift+S` (Snip & Sketch) to grab a region.

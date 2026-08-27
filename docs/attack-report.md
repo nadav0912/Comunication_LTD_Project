@@ -251,3 +251,6 @@ referenced from the sections above.
 | `05-xss-3001-alert.png` | XSS payload fires `alert(document.cookie)` on submit, :3001 |
 | `06-xss-3001-persist.png` | XSS fires again after logout + re-login (stored), :3001 |
 | `07-xss-3000-inert.png` | Same payload shown as literal text on :3000, no alert |
+| `08-sqli-register-3001-inject.png` | Register on :3001 with the breakout payload (DevTools shows the payload) |
+| `08b-sqli-register-3001-backdoor-login.png` | Logging in as the SQLi-created `backdoor` account on :3001 (optional) |
+| `09-sqli-register-3000-safe.png` | On :3000 the `backdoor` login is refused — no injected account was created |
