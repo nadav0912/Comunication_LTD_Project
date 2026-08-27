@@ -533,7 +533,7 @@ root implementing plan A4.
 
 ## ✅ Checkpoint E: Both builds run, attacks are asymmetric
 
-- [ ] SC9, SC11 pass on `:3001` and SC12 on `:3000` (done, by tests); **SC10** (XSS alert firing) still needs the browser
+- [x] SC9, SC11 pass on `:3001` and SC12 on `:3000` (tests); **SC10** (XSS alert firing) confirmed in browser (shots 05/06)
 - [x] `npm --prefix secure test` **and** `npm --prefix vulnerable test` both green (58/58, 56/56)
 - [x] `scripts/check-drift.sh` reports exactly six differing files
 - [x] Both apps run side by side and use separate databases
@@ -543,7 +543,7 @@ root implementing plan A4.
 
 ## Phase 8 — Evidence and delivery
 
-### - [~] T19: `docs/attack-report.md` + screenshots — REPORT DONE (screenshots pending, manual browser)
+### - [x] T19: `docs/attack-report.md` + screenshots — DONE (all 7 captured)
 
 **Description:** The graded artefact (§10.3, brief §7). Per vulnerability: exact payload, the
 request, a screenshot succeeding on `:3001`, a screenshot failing on `:3000`, the impact, the fix,
@@ -551,14 +551,14 @@ and the code diff. Plus the §14 Deliberate Deviations table and the explicit st
 client-side validation is not a security control.
 
 **Acceptance criteria:**
-- [x] Both vulnerabilities documented with payload, impact, fix (text + code diffs) — **screenshots pending** (SC16)
-- [ ] The stored-XSS *persistence* screenshot (fresh load after re-login) — pending (referenced in text as `06-…`)
+- [x] Both vulnerabilities documented with payload, impact, fix (text + code diffs) + before/after screenshots (SC16)
+- [x] The stored-XSS *persistence* screenshot (fresh load, empty form, alert fires) — `06-xss-3001-persist.png`
 - [x] All four D1–D4 deviations are explained with their correct alternatives
 - [x] The client-side-validation note is present and justified with the `curl` evidence
 
 **Verification:**
 - [x] A reader can reproduce both attacks from the document's payloads/steps alone
-- [ ] Every screenshot in `docs/screenshots/` exists (all 7 are referenced from the text; PNGs not yet captured)
+- [x] All 7 screenshots exist in `docs/screenshots/` and are referenced from the text
 
 **Dependencies:** T18
 **Files:** `docs/attack-report.md`, `docs/screenshots/*`
@@ -566,7 +566,7 @@ client-side validation is not a security control.
 
 ---
 
-### - [x] T20: `README.md` + full §16 sweep — DONE (screenshots pending)
+### - [x] T20: `README.md` + full §16 sweep — DONE
 
 **Description:** Setup instructions (RDS security group, `.env` from `.env.example`, `db:init`,
 Gmail app password), how to run both builds, the demo walkthrough, and a final pass confirming all
@@ -575,7 +575,7 @@ spec is the living contract.
 
 **Acceptance criteria:**
 - [x] The README documents a clean-clone path to two running apps (SC1) — not yet re-run from a literal fresh clone
-- [ ] All 17 criteria in §16 checked off — 16 proven by command/test; SC-screenshots (SC10/SC16 images) pending
+- [x] All 17 criteria in §16 checked off — command/test + the 7 screenshots (SC10/SC16)
 - [x] `git ls-files` shows no `.env`; `.env.example` present in both trees (SC17)
 - [x] `SPEC.md` open questions all resolved (§18) / decisions recorded
 
@@ -591,7 +591,7 @@ spec is the living contract.
 
 ## ✅ Checkpoint F: Ready to submit
 
-- [ ] All 17 success criteria in §16 verified — 16 done; SC screenshots (SC10/SC16 images) pending
+- [x] All 17 success criteria in §16 verified (16 by command/test + the 7 screenshots for SC10/SC16)
 - [x] Both test suites green with their opposite meanings (secure 58/58, vulnerable 56/56)
 - [x] `scripts/check-drift.sh` clean (exactly 6 files)
 - [x] No secret is committed anywhere in history (`.env`/`.env.test` always gitignored; no secrets in tracked files)
