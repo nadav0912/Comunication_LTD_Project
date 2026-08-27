@@ -53,6 +53,11 @@ in **without knowing any password**.
 
 **Impact.** Full authentication bypass — the attacker gets a valid session as an existing user.
 
+> **Browser note.** The login page trims the username client-side, which strips the trailing space
+> the `-- ` comment needs. In the **browser** use the equivalent `#` comment — `' OR '1'='1'#` —
+> which needs no space. The `-- ` form works at the API/`curl`/test level (no client trim), which is
+> what `secure/`+`vulnerable/` `tests/attacks.test.js` exercise.
+
 **Result.**
 - **Vulnerable `:3001`** → `200 OK`, session cookie set. *(screenshot: `screenshots/01-sqli-login-3001-success.png`)*
 - **Secure `:3000`** → `401 Unauthorized`. *(screenshot: `screenshots/02-sqli-login-3000-fail.png`)*
