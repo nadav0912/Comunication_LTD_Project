@@ -543,7 +543,7 @@ root implementing plan A4.
 
 ## Phase 8 — Evidence and delivery
 
-### - [ ] T19: `docs/attack-report.md` + screenshots
+### - [~] T19: `docs/attack-report.md` + screenshots — REPORT DONE (screenshots pending, manual browser)
 
 **Description:** The graded artefact (§10.3, brief §7). Per vulnerability: exact payload, the
 request, a screenshot succeeding on `:3001`, a screenshot failing on `:3000`, the impact, the fix,
