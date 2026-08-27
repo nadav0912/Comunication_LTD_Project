@@ -466,7 +466,7 @@ byte-identical, still-secure second app, so that T16/T17 are the only source of 
 
 ---
 
-### - [ ] T16: Reintroduce SQL injection (3 route modules)
+### - [x] T16: Reintroduce SQL injection (3 route modules) — DONE (live-verified)
 
 **Description:** Replace `pool.execute(sql, params)` with template-literal concatenation and
 `pool.query()` in `vulnerable/routes/auth.js`, `password.js`, and `customers.js`, each carrying the

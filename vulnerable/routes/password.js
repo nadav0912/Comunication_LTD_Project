@@ -1,7 +1,10 @@
 'use strict';
 
 // Password routes (SPEC.md §5.2/§5.5, §9.2/§9.5): change-password (T10), forgot (T11), reset (T12).
-// SECURE build: parameterized pool.execute everywhere. Reverted to concatenation in the vuln twin.
+//
+// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+// VULNERABLE build: the forgot (email) and reset (token) lookups concatenate user input into the SQL
+// via pool.query(). The secure twin binds them as parameters.
 
 const express = require('express');
 const pool = require('../db/connection');
@@ -47,7 +50,8 @@ router.post('/forgot', async (req, res, next) => {
     const { email } = req.body ?? {};
     if (!email) return res.status(400).json({ error: 'Email is required.' });
 
-    const [rows] = await pool.execute('SELECT id, email FROM users WHERE email = ? LIMIT 1', [email]);
+    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !! (email concatenated into SQL)
+    const [rows] = await pool.query(`SELECT id, email FROM users WHERE email = '${email}' LIMIT 1`);
     const user = rows[0];
 
     if (user) {
@@ -83,9 +87,9 @@ router.post('/reset', async (req, res, next) => {
       return res.status(400).json({ error: 'Token and new password are required.' });
     }
 
-    const [rows] = await pool.execute(
-      'SELECT id FROM users WHERE reset_token = ? AND reset_token_expires > NOW() LIMIT 1',
-      [token],
+    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !! (token concatenated into SQL)
+    const [rows] = await pool.query(
+      `SELECT id FROM users WHERE reset_token = '${token}' AND reset_token_expires > NOW() LIMIT 1`,
     );
     const user = rows[0];
     if (!user) return res.status(400).json({ error: 'Invalid or expired reset token.' });
