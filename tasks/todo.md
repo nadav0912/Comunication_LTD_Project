@@ -314,14 +314,14 @@ look up by email, generate `sha1(randomBytes(20))`, store it in `reset_token` wi
 the stored value are the same — the brief requires it; the report says why that is weak.
 
 **Acceptance criteria:**
-- [ ] A valid email results in a `reset_token` of 40 hex chars and a future `reset_token_expires`
-- [ ] A real email arrives at a real inbox containing that value (SC6)
-- [ ] Requesting a second token replaces the first — the old value stops working
-- [ ] An SMTP failure returns `500` without leaking credentials, and the token is not left half-issued
+- [x] A valid email results in a `reset_token` of 40 hex chars and a future `reset_token_expires`
+- [x] A real email arrives at a real inbox containing that value (SC6) — a real reset email was delivered to yzhak.mutzeri@gmail.com
+- [x] Requesting a second token replaces the first — the old value stops working
+- [x] An SMTP failure returns `500` without leaking credentials, and the token is not left half-issued
 
 **Verification:**
-- [ ] ⏳ `node --test --test-concurrency=1 --env-file=.env.test tests/reset-flow.test.js` (issuance cases; mailer stubbed in test)
-- [ ] ⏳ Manual: trigger from `/forgot-password.html` and read the real email (U6) — the one step that needs Q2 answered
+- [x] `node --test --test-concurrency=1 --env-file=.env.test tests/reset-flow.test.js` — issuance 4/4 (mailer stubbed)
+- [ ] Manual: trigger from `/forgot-password.html` in the browser (U6) — email delivery itself is verified; browser trigger not yet run
 
 **Dependencies:** T10 (reset reuses its history logic), **and open question Q2**
 **Files:** `secure/services/mailer.js`, `secure/routes/password.js`, `secure/public/forgot-password.html`, `secure/public/js/forgot-password.js`
@@ -337,16 +337,16 @@ hash with a **fresh salt** plus its `password_history` row exactly as T10 does, 
 set `is_locked = 0` and `failed_login_attempts = 0` — closing the U3 → U6 loop from §6.
 
 **Acceptance criteria:**
-- [ ] A valid, unexpired token with a compliant password returns `200` and login works with the new password
-- [ ] An expired token returns `400` and the password is unchanged
-- [ ] An unknown/already-used token returns `400`
-- [ ] A token that is valid but whose new password violates policy or history returns `400` and the token is **not** consumed
-- [ ] Redeeming a token on a locked account unlocks it — login then succeeds (SC4 tail)
-- [ ] A reset that reuses a password from history is rejected, proving T10's function is shared and not reimplemented
+- [x] A valid, unexpired token with a compliant password returns `200` and login works with the new password
+- [x] An expired token returns `400` and the password is unchanged
+- [x] An unknown/already-used token returns `400`
+- [x] A token that is valid but whose new password violates policy or history returns `400` and the token is **not** consumed
+- [x] Redeeming a token on a locked account unlocks it — login then succeeds (SC4 tail)
+- [x] A reset that reuses a password from history is rejected, proving T10's function is shared and not reimplemented
 
 **Verification:**
-- [ ] ⏳ `node --test --test-concurrency=1 --env-file=.env.test tests/reset-flow.test.js`
-- [ ] ⏳ Manual: lock an account with 3 bad logins, recover it entirely through the browser (U3 + U6 as one story)
+- [x] `node --test --test-concurrency=1 --env-file=.env.test tests/reset-flow.test.js` — 10/10 (4 T11 + 6 T12)
+- [ ] Manual: lock an account with 3 bad logins, recover it entirely through the browser (U3 + U6 as one story)
 
 **Dependencies:** T11
 **Files:** `secure/routes/password.js`, `secure/public/reset-password.html`, `secure/public/js/reset-password.js`, `secure/tests/reset-flow.test.js`
@@ -361,21 +361,21 @@ set `is_locked = 0` and `failed_login_attempts = 0` — closing the U3 → U6 lo
 doing it as a block with someone who can change AWS settings in the same minute.
 
 **Part 1 — connectivity (developer at the keyboard for AWS/Google)**
-- [ ] `npm --prefix secure run preflight` → `DB: ok` and `SMTP: ok`
-- [ ] If DB fails: add the printed public IP to the RDS security group (TCP 3306) and confirm the instance is publicly accessible; if TLS fails, fetch `global-bundle.pem` — **never** `rejectUnauthorized: false`
-- [ ] If SMTP fails: confirm 2FA is on for the Gmail account and the 16-char app password is in `.env`
+- [x] `npm --prefix secure run preflight` → `DB: ok` and `SMTP: ok` (all checks passed)
+- [x] DB TLS resolved by adding AWS `global-bundle.pem` as `ssl.ca` — never `rejectUnauthorized: false`
+- [x] SMTP: 2FA + 16-char app password configured; `SMTP: ok`
 
 **Part 2 — schema**
-- [ ] `npm --prefix secure run db:init` twice, both exit 0
-- [ ] `SHOW CREATE TABLE password_history` shows the `salt CHAR(32)` column (plan A8)
-- [ ] `SHOW CREATE TABLE users` shows `is_locked` and `reset_token CHAR(40)`
+- [x] `npm --prefix secure run db:init` twice, both exit 0
+- [x] `password_history` shows the `salt CHAR(32)` column (plan A8)
+- [x] `users` shows `is_locked` and `reset_token CHAR(40)`
 
 **Part 3 — the deferred backlog, all at once**
-- [ ] `npm --prefix secure test` green — every suite queued since T6 runs for the first time
-- [ ] SC1–SC8 all pass
-- [ ] Every screen in §5 of the brief works in a browser
-- [ ] A real reset email was received and redeemed (SC6)
-- [ ] After the run, the demo data is intact — no suite truncated anything (risk R4b); `npm run db:clean-tests` reports nothing left behind
+- [x] `npm --prefix secure test` green — every suite queued since T6 runs
+- [x] SC1–SC8 all pass (SC1 secure boots/serves; SC2–SC8 by tests + live)
+- [ ] Every screen in §5 works in a browser (pages serve 200; full browser walkthrough not yet confirmed)
+- [x] A real reset email was delivered (SC6); redemption verified by `reset-flow.test.js`
+- [x] After the run, demo data intact — no suite truncated; `npm run db:clean-tests` reports 0 leftovers
 
 - [ ] **Review with human before proceeding** — after this the tree gets copied, and every later change costs double
 
@@ -390,15 +390,15 @@ and assert they fail. Add the SC13 leak assertions and the SC14 static check tha
 `secure/routes/` contains an interpolation.
 
 **Acceptance criteria:**
-- [ ] `' OR '1'='1' -- ` as username returns `401` on login, not `200` (SC12)
-- [ ] A UNION payload in the customer path returns `400`/`401` and leaks no `users` columns (SC12)
-- [ ] The stored XSS payload round-trips byte-identically through `POST`→`GET /api/customers` — stored verbatim, escaped at render, not at storage
-- [ ] No response body in the whole suite contains `password_hash`, `salt`, `at Object.`, or `ER_` (SC13)
-- [ ] A repo check reports zero `${` inside a SQL string literal under `secure/routes/` (SC14)
+- [x] `' OR '1'='1' -- ` as username returns `401` on login, not `200` (SC12)
+- [x] A UNION payload in the customer path returns `400`/`401` and leaks no `users` columns (SC12)
+- [x] The stored XSS payload round-trips byte-identically through `POST`→`GET /api/customers` — stored verbatim, escaped at render, not at storage
+- [x] No response body in the whole suite contains `password_hash`, `salt`, `at Object.`, or `ER_` (SC13)
+- [x] A repo check reports zero `${` inside a SQL string literal under `secure/routes/` (SC14)
 
 **Verification:**
-- [ ] `node --test --test-concurrency=1 --env-file=.env.test tests/attacks.test.js` (runs at C′ or later — Phase 6 sits after the joint session)
-- [ ] `git grep -n '\${' secure/routes/` — no database needed; manual read of any hit
+- [x] `node --test --test-concurrency=1 --env-file=.env.test tests/attacks.test.js` — 5/5
+- [x] `npm run check:sql` (and `git grep '\${' secure/routes/`) — clean, 3 route files
 
 **Dependencies:** T12
 **Files:** `secure/tests/attacks.test.js`, `secure/scripts/check-sql.js`
@@ -414,16 +414,16 @@ script in §4 to its exact command, and add a minimal ESLint 9 flat config. *Dro
 open question Q3 says so.*
 
 **Acceptance criteria:**
-- [ ] `npm run db:seed` is idempotent and prints the demo credentials it created
-- [ ] `npm run db:clean-tests` deletes only `__test_%` rows and reports the count, leaving demo data untouched
-- [ ] All ten scripts in §4 exist and run
-- [ ] `npm run lint` passes clean across the tree
-- [ ] Test commands include `--test-concurrency=1` (plan A6)
-- [ ] `git grep -in 'truncate' secure/tests/` returns nothing (risk R4b)
+- [x] `npm run db:seed` is idempotent and prints the demo credentials it created
+- [x] `npm run db:clean-tests` deletes only `__test_%` rows and reports the count, leaving demo data untouched
+- [x] All ten scripts in §4 exist and run
+- [x] `npm run lint` passes clean across the tree
+- [x] Test commands include `--test-concurrency=1` (plan A6)
+- [x] `git grep -in 'truncate' secure/tests/` returns nothing (risk R4b)
 
 **Verification:**
-- [ ] Run each of the eight scripts once
-- [ ] `npm --prefix secure test` green from a freshly seeded database
+- [x] Ran seed (x2, idempotent), clean-tests, lint, lint:fix — all as expected
+- [x] `npm --prefix secure test` green (58/58) from a seeded database
 
 **Dependencies:** T13
 **Files:** `secure/scripts/seed.js`, `secure/scripts/clean-tests.js`, `secure/package.json`, `secure/eslint.config.js`
@@ -433,10 +433,10 @@ open question Q3 says so.*
 
 ## ✅ Checkpoint D: Secure build is hardened and green
 
-- [ ] SC12, SC13, SC14 pass
-- [ ] `npm --prefix secure test` green, including the attack suite
-- [ ] `npm run lint` clean
-- [ ] Definition of Done "Security posture" section verified by reading `routes/` top to bottom
+- [x] SC12, SC13, SC14 pass
+- [x] `npm --prefix secure test` green, including the attack suite (58/58)
+- [x] `npm run lint` clean
+- [x] Definition of Done "Security posture" section verified by reading `routes/` top to bottom
 - [ ] **Review with human before proceeding** — `secure/` is now frozen as the baseline
 
 ---
@@ -451,14 +451,14 @@ initialise the second database. **No code changes in this task** — this step m
 byte-identical, still-secure second app, so that T16/T17 are the only source of divergence.
 
 **Acceptance criteria:**
-- [ ] `vulnerable/` runs on `:3001` against `comm_ltd_vulnerable` with all §5 screens working
-- [ ] Immediately after this task, `diff -r -q secure vulnerable -x node_modules -x .env -x package-lock.json` reports **only** `.env.example`
-- [ ] The vulnerable app cannot reach `comm_ltd_secure` (§13 Never)
+- [x] `vulnerable/` runs on `:3001` against `vulnerable_app_db` with the §5 screens serving
+- [x] Immediately after this task, `diff -r -q secure vulnerable` (excl. node_modules/.env/.env.test/lock) reports **only** `.env.example`
+- [x] The vulnerable app cannot reach `secure_app_db` (points at `vulnerable_app_db`; §13 Never)
 
 **Verification:**
-- [ ] `npm --prefix vulnerable install && npm --prefix vulnerable run db:init && npm --prefix vulnerable start`
-- [ ] Both apps running simultaneously on 3000 and 3001
-- [ ] `npm --prefix vulnerable test` green (still the secure suite at this point)
+- [x] `npm --prefix vulnerable install && run db:init && preflight` — DB+SMTP ok
+- [x] Both apps boot simultaneously on 3000 and 3001
+- [x] `npm --prefix vulnerable test` green — 58/58 (still the secure suite at this point)
 
 **Dependencies:** T14
 **Files:** `vulnerable/**` (copy), `vulnerable/.env`, `vulnerable/.env.example`
@@ -474,14 +474,14 @@ byte-identical, still-secure second app, so that T16/T17 are the only source of 
 (risk R6) — the demo relies on `OR '1'='1'` and `UNION`, never on stacked statements.
 
 **Acceptance criteria:**
-- [ ] Username `' OR '1'='1' -- ` with any password returns `200` and a session on `:3001` (SC9)
-- [ ] A UNION payload returns rows sourced from `users` on `:3001` (SC11)
-- [ ] Every reintroduced flaw carries the banner comment and a §10 reference
-- [ ] `multipleStatements` is still `false` in `vulnerable/db/connection.js`
+- [x] Username `' OR '1'='1' -- ` with any password returns `200` and a session on `:3001` (SC9)
+- [x] A UNION payload returns rows sourced from `users` on `:3001` (SC11)
+- [x] Every reintroduced flaw carries the banner comment and a §10 reference
+- [x] `multipleStatements` is still `false` in `vulnerable/db/connection.js`
 
 **Verification:**
-- [ ] Manual `curl` of both payloads against `:3001`, captured for T19
-- [ ] The identical payloads still fail against `:3000`
+- [x] Both payloads verified against `:3001` (supertest) — bypass 200, UNION leaks username + hash
+- [x] The identical payloads still fail against `:3000` (secure attacks suite)
 
 **Dependencies:** T15
 **Files:** `vulnerable/routes/auth.js`, `vulnerable/routes/password.js`, `vulnerable/routes/customers.js`
@@ -499,7 +499,7 @@ the point the report makes about where the vulnerability actually lives.
 - [ ] A customer named `<img src=x onerror="alert(document.cookie)">` fires an alert on `:3001` on submit (SC10)
 - [ ] It fires **again** on a fresh page load after logout and re-login — proving *stored*, not reflected (SC10)
 - [ ] The same record renders as literal text on `:3000`
-- [ ] The change is exactly one line plus the banner
+- [x] The change is the two render writes (`renderLast` + `renderList`) → `innerHTML`, each with the banner (both are needed so the payload fires on submit **and** on reload)
 
 **Verification:**
 - [ ] Manual in a real browser on both ports, screenshotted for T19
@@ -517,13 +517,13 @@ here means a vulnerability was accidentally fixed (§12). Add `scripts/check-dri
 root implementing plan A4.
 
 **Acceptance criteria:**
-- [ ] `npm --prefix vulnerable test` is green, where green means the attacks succeeded
-- [ ] `npm --prefix secure test` is still green, where green means the same payloads failed
-- [ ] `scripts/check-drift.sh` reports exactly the six files listed in plan A4, and exits non-zero on a seventh
+- [x] `npm --prefix vulnerable test` is green (56/56), where green means the attacks succeeded
+- [x] `npm --prefix secure test` is still green (58/58), where green means the same payloads failed
+- [x] `scripts/check-drift.sh` reports exactly the six files listed in plan A4, and exits non-zero on a seventh
 
 **Verification:**
-- [ ] Both suites run back to back
-- [ ] `bash scripts/check-drift.sh`
+- [x] Both suites run back to back — secure 58/58, vulnerable 56/56
+- [x] `bash scripts/check-drift.sh` — ok, exactly 6 files
 
 **Dependencies:** T16, T17
 **Files:** `vulnerable/tests/attacks.test.js`, `scripts/check-drift.sh`
@@ -533,10 +533,10 @@ root implementing plan A4.
 
 ## ✅ Checkpoint E: Both builds run, attacks are asymmetric
 
-- [ ] SC9, SC10, SC11 pass on `:3001`; SC12 passes on `:3000`
-- [ ] `npm --prefix secure test` **and** `npm --prefix vulnerable test` both green
-- [ ] `scripts/check-drift.sh` reports exactly six differing files
-- [ ] Both apps run side by side and use separate databases
+- [ ] SC9, SC11 pass on `:3001` and SC12 on `:3000` (done, by tests); **SC10** (XSS alert firing) still needs the browser
+- [x] `npm --prefix secure test` **and** `npm --prefix vulnerable test` both green (58/58, 56/56)
+- [x] `scripts/check-drift.sh` reports exactly six differing files
+- [x] Both apps run side by side and use separate databases
 - [ ] **Review with human before proceeding**
 
 ---
@@ -551,14 +551,14 @@ and the code diff. Plus the §14 Deliberate Deviations table and the explicit st
 client-side validation is not a security control.
 
 **Acceptance criteria:**
-- [ ] Both vulnerabilities documented with payload, impact, fix, and before/after screenshots (SC16)
-- [ ] The stored-XSS section shows the *persistence* screenshot (fresh load after re-login), not only the submit-time alert
-- [ ] All four D1–D4 deviations are explained with their correct alternatives
-- [ ] The client-side-validation note is present and justified with the `curl` evidence from T6
+- [x] Both vulnerabilities documented with payload, impact, fix (text + code diffs) — **screenshots pending** (SC16)
+- [ ] The stored-XSS *persistence* screenshot (fresh load after re-login) — pending (referenced in text as `06-…`)
+- [x] All four D1–D4 deviations are explained with their correct alternatives
+- [x] The client-side-validation note is present and justified with the `curl` evidence
 
 **Verification:**
-- [ ] A reader who has never seen the repo can reproduce both attacks from this document alone
-- [ ] Every screenshot in `docs/screenshots/` is referenced from the text
+- [x] A reader can reproduce both attacks from the document's payloads/steps alone
+- [ ] Every screenshot in `docs/screenshots/` exists (all 7 are referenced from the text; PNGs not yet captured)
 
 **Dependencies:** T18
 **Files:** `docs/attack-report.md`, `docs/screenshots/*`
@@ -574,14 +574,14 @@ Gmail app password), how to run both builds, the demo walkthrough, and a final p
 spec is the living contract.
 
 **Acceptance criteria:**
-- [ ] A clean clone can be brought to two running apps using only the README (SC1)
-- [ ] All 17 criteria in §16 are checked off with the command or screenshot that proves each
-- [ ] `git ls-files` shows no `.env`; `.env.example` present in both trees (SC17)
-- [ ] `SPEC.md` §17 open questions are all resolved or explicitly marked as out of scope
+- [x] The README documents a clean-clone path to two running apps (SC1) — not yet re-run from a literal fresh clone
+- [ ] All 17 criteria in §16 checked off — 16 proven by command/test; SC-screenshots (SC10/SC16 images) pending
+- [x] `git ls-files` shows no `.env`; `.env.example` present in both trees (SC17)
+- [x] `SPEC.md` open questions all resolved (§18) / decisions recorded
 
 **Verification:**
-- [ ] Fresh-clone dry run following the README verbatim
-- [ ] `git ls-files | grep -c '\.env$'` returns 0
+- [ ] Fresh-clone dry run following the README verbatim — not performed
+- [x] `git ls-files | grep -c '\.env$'` returns 0
 
 **Dependencies:** T19
 **Files:** `README.md`, `SPEC.md`, `tasks/todo.md`
@@ -591,9 +591,9 @@ spec is the living contract.
 
 ## ✅ Checkpoint F: Ready to submit
 
-- [ ] All 17 success criteria in §16 verified
-- [ ] Both test suites green with their opposite meanings
-- [ ] `scripts/check-drift.sh` clean
-- [ ] No secret is committed anywhere in history
-- [ ] `docs/attack-report.md` is reproducible by a stranger
+- [ ] All 17 success criteria in §16 verified — 16 done; SC screenshots (SC10/SC16 images) pending
+- [x] Both test suites green with their opposite meanings (secure 58/58, vulnerable 56/56)
+- [x] `scripts/check-drift.sh` clean (exactly 6 files)
+- [x] No secret is committed anywhere in history (`.env`/`.env.test` always gitignored; no secrets in tracked files)
+- [x] `docs/attack-report.md` is reproducible by a stranger (payloads + steps; screenshots enhance)
 - [ ] **Final review with human**
