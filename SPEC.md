@@ -706,6 +706,13 @@ therefore performs the credential check as a **second concatenated query** (`use
 `password_hash`), which `' OR '1'='1' -- ` comments out — making SC9 hold while normal logins and
 lockout still work. (The secure build verifies in app code with `timingSafeEqual`, unchanged.)
 
+**SQL injection spans §1/§3/§4 (course brief Part B).** The vulnerable build demonstrates SQLi on
+Register (§1 — the `INSERT` concatenates username/email, so a crafted username breaks out of the
+`VALUES` list and sets its own columns), Login (§3 — auth bypass above), and the System screen (§4 —
+the customer search `SELECT`, UNION-leaking `users`). The add-customer `INSERT` stays parameterized in
+both builds so a single-quote XSS payload still stores verbatim; §4's SQLi lives on the search. All
+three are fixed in the secure build with `pool.execute(sql, params)`.
+
 **Password-history reuse window.** Per §6, the window is the last `historyCount` `password_history`
 rows **including the current password**; a password that has fallen out of that window is reusable.
 

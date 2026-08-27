@@ -48,6 +48,17 @@ test('SC12: a stacked/OR SQLi in the password field cannot bypass login', async 
   assert.equal(res.status, 401);
 });
 
+test('SC12 (§1): SQLi in the register form does not inject (parameterized)', async () => {
+  const marker = `inj_${runId}@evil.example`;
+  const injectedUser = uname('regsec');
+  const payload = `${injectedUser}', '${marker}', 'x', 'y') -- `;
+  await request(app).post('/api/register')
+    .send({ username: payload, email: 'real@example.com', password: VALID_PW });
+  // The username is a bound parameter, never parsed — no user gets the injected marker email.
+  const [rows] = await pool.execute('SELECT id FROM users WHERE email = ?', [marker]);
+  assert.equal(rows.length, 0);
+});
+
 test('SC12: a UNION payload in customer search leaks no users columns', async () => {
   const payload = "' UNION SELECT id, username, password_hash, salt, 1, 1, 1, NOW() FROM users -- ";
   const res = await canary.agent.get('/api/customers?search=' + encodeURIComponent(payload));
