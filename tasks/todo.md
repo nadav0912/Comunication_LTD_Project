@@ -566,7 +566,7 @@ client-side validation is not a security control.
 
 ---
 
-### - [ ] T20: `README.md` + full §16 sweep
+### - [x] T20: `README.md` + full §16 sweep — DONE (screenshots pending)
 
 **Description:** Setup instructions (RDS security group, `.env` from `.env.example`, `db:init`,
 Gmail app password), how to run both builds, the demo walkthrough, and a final pass confirming all

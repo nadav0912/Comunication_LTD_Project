@@ -682,3 +682,47 @@ Testable conditions. The project is done when all of these hold.
 5. **Dictionary list** — `data/common-passwords.txt` will ship with roughly the top 1,000 common passwords. Larger list, or is 1,000 enough for the demo?
 6. **Customer fields** — the brief leaves these open; I've chosen name, email, phone, sector, package. Add anything the course requires (e.g. a fixed package dropdown from a lookup table)?
 7. **Report language** — is `docs/attack-report.md` submitted in English or Hebrew?
+
+---
+
+## 18. As-Built Decisions & Open-Question Resolutions
+
+Recorded during implementation (the spec is the living contract). Where this section differs from
+earlier text above, **this section is what was built**.
+
+**Database names.** The instance uses `secure_app_db` (secure) and `vulnerable_app_db` (vulnerable),
+not `comm_ltd_secure` / `comm_ltd_vulnerable`. The two-schema separation of §3 is unchanged; only the
+names differ. The code reads `process.env.DB_NAME`, so nothing is hard-coded.
+
+**RDS TLS.** AWS RDS server certs are not in Node's default trust store, so the pool loads AWS's
+public `db/global-bundle.pem` as `ssl.ca` (auto-detected; `DB_SSL_CA` overrides). `rejectUnauthorized`
+stays `true` — never disabled.
+
+**Customer search endpoint (added).** `GET /api/customers?search=<term>` (name filter) was added
+beyond §8. §10.2 requires a UNION demo on the customer path, which needs an injectable `SELECT`;
+the list endpoint took no input. Secure binds the term; the vulnerable twin concatenates it.
+
+**Vulnerable login is two queries.** Passwords are verified in application code with a per-user salt,
+so a single `WHERE username='…'` injection could not bypass the password check. The vulnerable build
+therefore performs the credential check as a **second concatenated query** (`username` +
+`password_hash`), which `' OR '1'='1' -- ` comments out — making SC9 hold while normal logins and
+lockout still work. (The secure build verifies in app code with `timingSafeEqual`, unchanged.)
+
+**Password-history reuse window.** Per §6, the window is the last `historyCount` `password_history`
+rows **including the current password**; a password that has fallen out of that window is reusable.
+
+**Test command.** `npm test` runs `node --test … tests/*.test.js` (a glob) — the bare `tests/`
+directory argument is mis-handled as a module path on Node 22 / Windows.
+
+**Open questions resolved:**
+1. **ESLint** — kept (minimal ESLint 9 flat config; `npm run lint` clean).
+2. **CSRF** — omitted (not required by the brief); noted as future work in the attack report.
+3. **RDS databases** — `init-db.js` issues `CREATE DATABASE IF NOT EXISTS` and created both.
+4. **Gmail** — configured and verified; a real reset email was delivered end to end (SC6).
+5. **Dictionary** — ships ~250 common passwords/words; sufficient for the demo (expandable).
+6. **Customer fields** — name, email, phone, sector, package; sector/package are dropdowns.
+7. **Report language** — English (`docs/attack-report.md`).
+
+**Deferred:** `nodemailer` is pinned to `^6.9` per §2 despite a high-severity npm advisory whose only
+fix is a breaking v9 upgrade — out of scope for the taught SQLi/XSS demo. The seven attack screenshots
+in `docs/screenshots/` are a manual browser capture step (guide in that directory).
