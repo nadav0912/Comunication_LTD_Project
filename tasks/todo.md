@@ -510,7 +510,7 @@ the point the report makes about where the vulnerability actually lives.
 
 ---
 
-### - [ ] T18: `vulnerable/tests/attacks.test.js` + drift check
+### - [x] T18: `vulnerable/tests/attacks.test.js` + drift check — DONE (live-verified)
 
 **Description:** Invert the secure attack suite: assert the SQLi payloads **succeed**. A red suite
 here means a vulnerability was accidentally fixed (§12). Add `scripts/check-drift.sh` at the repo
