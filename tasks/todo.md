@@ -489,7 +489,7 @@ byte-identical, still-secure second app, so that T16/T17 are the only source of 
 
 ---
 
-### - [ ] T17: Reintroduce the stored-XSS render sink
+### - [x] T17: Reintroduce the stored-XSS render sink — DONE (browser demo at T19)
 
 **Description:** One line in `vulnerable/public/js/system.js`: `textContent` → `innerHTML`, with the
 banner comment. Storage is already verbatim in both trees, so nothing server-side changes — which is

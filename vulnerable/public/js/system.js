@@ -2,10 +2,11 @@
 
 // System screen (SPEC.md §5.4, §9.4). *** THE XSS SINK LIVES HERE. ***
 //
-// SECURE build: customer names are written with textContent, so a payload like
-// `<img src=x onerror="alert(document.cookie)">` renders as visible, inert TEXT — never parsed as
-// markup (§10.1 fix). The vulnerable twin changes exactly these two writes to innerHTML (T17). The
-// name is stored verbatim server-side in BOTH builds — the difference is purely at render.
+// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.1 !!
+// VULNERABLE build: customer names are written with innerHTML, so a stored payload like
+// `<img src=x onerror="alert(document.cookie)">` is parsed as markup and EXECUTES — on submit and
+// again on every page load (proving it is stored, not reflected). The secure twin uses textContent.
+// The name is stored verbatim server-side in BOTH builds — the difference is purely at render.
 (function () {
   const form = document.getElementById('customer-form');
   const lastCustomer = document.getElementById('lastCustomer');
@@ -21,7 +22,10 @@
   }
 
   function renderLast(customer) {
-    lastCustomer.textContent = customer.name; // SECURE render sink
+    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.1 !!
+    // innerHTML parses the stored name as markup, so `<img src=x onerror=...>` executes. The secure
+    // twin uses textContent. Storage is verbatim in both builds — the flaw lives here, at render.
+    lastCustomer.innerHTML = customer.name;
   }
 
   function renderList(customers) {
@@ -29,7 +33,9 @@
     for (const customer of customers) {
       const li = document.createElement('li');
       li.className = 'list-group-item';
-      li.textContent = customer.name; // SECURE render sink
+      // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.1 !! (payload re-fires on every page load,
+      // which is what proves the XSS is STORED, not reflected)
+      li.innerHTML = customer.name;
       listEl.appendChild(li);
     }
   }
