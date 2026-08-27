@@ -1,7 +1,6 @@
 # Implementation Plan: Comunication_LTD Secure Information System
 
-**Source of truth:** [`SPEC.md`](../SPEC.md) (which derives from the course brief
-[`Comunication_LTD_Spec.md`](../Comunication_LTD_Spec.md)). Section references below (§n) point at
+**Source of truth:** [`SPEC.md`](../SPEC.md). Section references below (§n) point at
 `SPEC.md` unless stated otherwise.
 
 **Task list target:** `tasks/todo.md` (no external tracker configured for this repo).
