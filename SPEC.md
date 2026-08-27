@@ -1,8 +1,7 @@
 # Spec: Comunication_LTD Secure Information System
 
-> Derived from `Comunication_LTD_Spec.md` (the course brief). Where this document is more
-> specific than the brief, this document governs implementation. Where the two conflict on a
-> *requirement*, the brief wins and the conflict is recorded in **Deliberate Deviations** (§14).
+> This document governs implementation. It was derived from the original course brief; requirement-level
+> deviations are recorded in **Deliberate Deviations** (§14) and as-built decisions in §18.
 
 ---
 
@@ -149,8 +148,7 @@ test schema and how suites avoid destroying demo data.
 
 ```
 Comunication_LTD_Project/
-├── Comunication_LTD_Spec.md      # original course brief (source of truth for requirements)
-├── SPEC.md                       # this document
+├── SPEC.md                       # this document — governs implementation
 ├── README.md                     # setup, how to run both builds, demo walkthrough
 ├── docs/
 │   ├── attack-report.md          # deliverable §7.1/§7.5 — each attack, impact, fix

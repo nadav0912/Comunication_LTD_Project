@@ -5,7 +5,7 @@ their own credentials, and registers **customers** (data records). It ships **tw
 intentionally **vulnerable** build and a **secure** build — so that Stored XSS and SQL Injection can
 be demonstrated *succeeding* on one and *failing* on the other.
 
-- **Spec:** [`SPEC.md`](SPEC.md) (governs implementation) · course brief: [`Comunication_LTD_Spec.md`](Comunication_LTD_Spec.md)
+- **Spec:** [`SPEC.md`](SPEC.md) (governs implementation)
 - **Attack evidence:** [`docs/attack-report.md`](docs/attack-report.md)
 - **Plan / tasks:** [`tasks/plan.md`](tasks/plan.md), [`tasks/todo.md`](tasks/todo.md)
 
