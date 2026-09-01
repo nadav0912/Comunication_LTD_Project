@@ -145,3 +145,4 @@ vite.config.ts.timestamp-*
 # Test suites
 vulnerable/tests/
 secure/tests/
+scripts/
