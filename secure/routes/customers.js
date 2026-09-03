@@ -1,11 +1,11 @@
 'use strict';
 
-// Customer routes (SPEC.md §5.4, §9.4, §10.2). Authenticated only. The name is stored VERBATIM — no
-// input sanitisation (§13 Never: sanitising here would delete the stored-XSS demo).
+// Customer routes. Authenticated only. The name is stored VERBATIM — no
+// input sanitisation (sanitising here would delete the stored-XSS demo).
 //
 // SECURE build: every query uses parameterized pool.execute — input travels as a bound value and can
 // never be parsed as SQL. GET supports ?search= (name filter): this is the SELECT the UNION demo
-// targets (§10.2), and the file the vulnerable twin reverts to string concatenation (T16).
+// targets, and the file the vulnerable twin reverts to string concatenation.
 //
 // No template interpolation appears in any SQL string here — SC14 greps this directory for it.
 
@@ -36,8 +36,7 @@ router.post('/customers', requireAuth, async (req, res, next) => {
 });
 
 // GET /api/customers[?search=term] — full list, or filtered by name. The search term is a BOUND
-// parameter; the % wildcards wrap the value, never the SQL (this is the vulnerable twin's injection
-// point once it reverts to concatenation).
+// parameter; the % wildcards wrap the value, never the SQL (this is the vulnerable twin's injection point once it reverts to concatenation).
 router.get('/customers', requireAuth, async (req, res, next) => {
   try {
     const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';

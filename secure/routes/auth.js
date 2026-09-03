@@ -1,6 +1,6 @@
 'use strict';
 
-// Auth routes (SPEC.md §5.1/§5.3, §9.1/§9.3). JSON only — never returns HTML.
+// Auth routes. JSON only — never returns HTML.
 // SECURE build: every query uses pool.execute(sql, params) — input travels as a bound parameter and
 // can never be parsed as SQL. This is the file the vulnerable twin reverts to string concatenation.
 
@@ -11,9 +11,10 @@ const { validatePassword, policy } = require('../services/passwordPolicy');
 
 const router = express.Router();
 
-// POST /api/register (§9.1). Validate policy -> salt -> HMAC -> insert user -> insert the SAME
+// POST /api/register
+// Validate policy -> salt -> HMAC -> insert user -> insert the SAME
 // (hash, salt) pair as the first password_history row, in one transaction so the invariant "one
-// history row per password" (plan A8) can never be left half-written.
+// history row per password" can never be left half-written.
 router.post('/register', async (req, res, next) => {
   try {
     const { username, email, password } = req.body ?? {};
@@ -57,11 +58,10 @@ router.post('/register', async (req, res, next) => {
   }
 });
 
-// POST /api/login (§9.3, §11 reference). Parameterized lookup. Deviation D1: an unknown username is
-// reported distinctly ("User does not exist.") because the brief requires it — the report notes the
+// POST /api/login. Parameterized lookup.
+// an unknown username is reported distinctly ("User does not exist.") because the brief requires it — the report notes the
 // safe alternative. On a wrong password the failed-attempt counter is bumped and the account locks
-// at config.maxLoginAttempts (§6 lockout, exercised by T8). On success the counter resets and the
-// session id is regenerated (fixation defence).
+// at config.maxLoginAttempts. On success the counter resets and the session id is regenerated (fixation defence).
 router.post('/login', async (req, res, next) => {
   try {
     const { username, password } = req.body ?? {};
@@ -102,7 +102,7 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
-// POST /api/logout (§5.3).
+// POST /api/logout
 router.post('/logout', (req, res, next) => {
   req.session.destroy((err) => {
     if (err) return next(err);
@@ -111,7 +111,7 @@ router.post('/logout', (req, res, next) => {
   });
 });
 
-// GET /api/me — session probe for the client (§8).
+// GET /api/me — session probe for the client
 router.get('/me', (req, res) => {
   if (req.session && req.session.userId) {
     return res.json({ username: req.session.username });

@@ -1,6 +1,6 @@
 'use strict';
 
-// Password routes (SPEC.md §5.2/§5.5, §9.2/§9.5): change-password (T10), forgot (T11), reset (T12).
+// Password routes: change-password, forgot, reset.
 // SECURE build: parameterized pool.execute everywhere. Reverted to concatenation in the vuln twin.
 
 const express = require('express');
@@ -12,7 +12,7 @@ const mailer = require('../services/mailer');
 
 const router = express.Router();
 
-// POST /api/change-password (§9.2). Verify the current password (timing-safe), then apply the
+// POST /api/change-password. Verify the current password (timing-safe), then apply the
 // shared policy+history+salt-rotation logic.
 router.post('/change-password', requireAuth, async (req, res, next) => {
   try {
@@ -38,10 +38,10 @@ router.post('/change-password', requireAuth, async (req, res, next) => {
   }
 });
 
-// POST /api/forgot (§9.5). Look up by email, issue sha1(randomBytes(20)) as reset_token with a
-// server-clock expiry, and email it (deviation D3: emailed value == stored value). Always returns
-// {ok:true} — it never reveals whether the email exists (no enumeration on this endpoint). If the
-// send fails, the just-issued token is cleared so nothing is left half-issued.
+// POST /api/forgot. Look up by email, issue sha1(randomBytes(20)) as reset_token with a
+// server-clock expiry, and email it (emailed value == stored value).
+// Always returns {ok:true} — it never reveals whether the email exists (no enumeration on this endpoint).
+// If the send fails, the just-issued token is cleared so nothing is left half-issued.
 router.post('/forgot', async (req, res, next) => {
   try {
     const { email } = req.body ?? {};
@@ -72,7 +72,7 @@ router.post('/forgot', async (req, res, next) => {
   }
 });
 
-// POST /api/reset (§9.5). Match an unexpired token, apply the SAME policy+history+salt logic as
+// POST /api/reset. Match an unexpired token, apply the SAME policy+history+salt logic as
 // change-password (shared changePassword — not a second copy), then clear the token and unlock the
 // account (is_locked=0, failed_login_attempts=0), closing the U3 -> U6 loop. If the new password
 // fails policy/history the token is NOT consumed, so the user can retry.

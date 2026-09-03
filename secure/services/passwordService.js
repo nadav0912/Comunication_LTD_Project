@@ -1,7 +1,7 @@
 'use strict';
 
-// Shared password-change logic (SPEC.md §9.2, §6/§7, plan A8). Used by BOTH change-password (T10)
-// and reset (T12) — one function, not two copies, so history/salt semantics can never drift.
+// Shared password-change logic. Used by BOTH change-password
+// and reset — one function, not two copies, so history/salt semantics can never drift.
 //
 // Model: one password_history row per password, written when it becomes active; the current password
 // is the newest row. The reuse window is the last `historyCount` rows (current included). Salt is
