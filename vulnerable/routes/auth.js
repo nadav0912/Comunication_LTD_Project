@@ -1,11 +1,11 @@
 'use strict';
 
-// Auth routes (SPEC.md §5.1/§5.3, §9.1/§9.3). JSON only — never returns HTML.
+// Auth routes. JSON only — never returns HTML.
 //
-// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+// !! INTENTIONALLY VULNERABLE !!
 // VULNERABLE build: both the register and login queries concatenate user input straight into the SQL
 // text via pool.query(). In login, `' OR '1'='1' -- ` rewrites the WHERE clause (auth bypass); in
-// register, a crafted username breaks out of the INSERT's VALUES list (§1 SQLi). The secure twin uses
+// register, a crafted username breaks out of the INSERT's VALUES list. The secure twin uses
 // pool.execute(sql, params) instead. multipleStatements stays false (db/connection.js), so the demo
 // relies on OR/UNION/breakout, never stacked statements.
 
@@ -16,7 +16,7 @@ const { validatePassword, policy } = require('../services/passwordPolicy');
 
 const router = express.Router();
 
-// POST /api/register (§9.1). Validate policy -> salt -> HMAC -> insert user -> insert the SAME
+// POST /api/register . Validate policy -> salt -> HMAC -> insert user -> insert the SAME
 // (hash, salt) pair as the first password_history row, in one transaction so the invariant "one
 // history row per password" (plan A8) can never be left half-written.
 router.post('/register', async (req, res, next) => {
@@ -37,7 +37,6 @@ router.post('/register', async (req, res, next) => {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
-      // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
       // username and email are concatenated into the INSERT, so a crafted username can break out of
       // the VALUES list and control the stored columns (e.g. inject its own email / password_hash).
       const [result] = await conn.query(
@@ -63,9 +62,9 @@ router.post('/register', async (req, res, next) => {
   }
 });
 
-// POST /api/login (§9.3, §10.2). Deviation D1: an unknown username is reported distinctly.
+// POST /api/login . Deviation D1: an unknown username is reported distinctly.
 //
-// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+// !! INTENTIONALLY VULNERABLE !!
 // Because passwords are salted per user, the credential check is a SECOND concatenated query
 // (username + password_hash). The trailing `-- ` in `' OR '1'='1' -- ` comments out the
 // ` AND password_hash = '...'` condition, so ANY password authenticates and login is bypassed.
@@ -77,18 +76,17 @@ router.post('/login', async (req, res, next) => {
       return res.status(400).json({ error: 'Username and password are required.' });
     }
 
-    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !! (username concatenated into SQL)
+    // username concatenated into SQL
     const [rows] = await pool.query(
       `SELECT id, salt, is_locked, failed_login_attempts FROM users WHERE username = '${username}'`,
     );
     const user = rows[0];
-    if (!user) return res.status(401).json({ error: 'User does not exist.' }); // D1
+    if (!user) return res.status(401).json({ error: 'User does not exist.' });
 
     if (user.is_locked) {
       return res.status(403).json({ error: 'Account locked. Use "Forgot password" to unlock.' });
     }
 
-    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
     // The password check lives in the SQL; `' OR '1'='1' -- ` comments out the password_hash clause.
     const candidateHash = hashPassword(password, user.salt);
     const [authRows] = await pool.query(
@@ -117,7 +115,7 @@ router.post('/login', async (req, res, next) => {
   }
 });
 
-// POST /api/logout (§5.3).
+// POST /api/logout.
 router.post('/logout', (req, res, next) => {
   req.session.destroy((err) => {
     if (err) return next(err);
@@ -126,7 +124,7 @@ router.post('/logout', (req, res, next) => {
   });
 });
 
-// GET /api/me — session probe for the client (§8).
+// GET /api/me — session probe for the client.
 router.get('/me', (req, res) => {
   if (req.session && req.session.userId) {
     return res.json({ username: req.session.username });

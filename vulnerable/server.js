@@ -1,6 +1,6 @@
 'use strict';
 
-// Express application (SPEC.md §2, §3, §8). Serves public/ statically and mounts a JSON API under
+// Express application. Serves public/ statically and mounts a JSON API under
 // /api/*. There is no server-side templating — output encoding is entirely the client's job, which
 // is what the XSS demo turns on (see public/js/system.js). Exposed as a factory so tests mount the
 // app with supertest without opening a port.
@@ -11,7 +11,7 @@ const express = require('express');
 const session = require('express-session');
 const errorHandler = require('./middleware/errorHandler');
 
-// Session cookie policy (SPEC §14): httpOnly blunts XSS cookie theft, sameSite:'lax' blunts
+// Session cookie policy: httpOnly blunts XSS cookie theft, sameSite:'lax' blunts
 // cross-site POSTs, secure is set behind TLS. Exported so tests assert the shipped config directly.
 function sessionOptions() {
   const secure = process.env.NODE_ENV === 'production' || process.env.COOKIE_SECURE === 'true';
@@ -29,11 +29,11 @@ function createApp() {
   app.use(express.json());
   app.use(session(sessionOptions()));
 
-  // API router — feature routes attach here.
+  // API router
   const api = express.Router();
-  api.use('/', require('./routes/auth'));           // register/login/logout (T6/T7/T8)
-  api.use('/', require('./routes/customers'));      // customers (T9)
-  api.use('/', require('./routes/password'));       // change/forgot/reset (T10/T11/T12)
+  api.use('/', require('./routes/auth'));           // register/login/logout 
+  api.use('/', require('./routes/customers'));      // customers 
+  api.use('/', require('./routes/password'));       // change/forgot/reset
   app.use('/api', api);
 
   // Unknown /api/* paths return JSON, never the static 404 HTML.
@@ -55,6 +55,6 @@ if (require.main === module) {
   const port = Number(process.env.PORT) || 3000;
   app.listen(port, () => {
     // eslint-disable-next-line no-console
-    console.log(`Comunication_LTD (secure) listening on :${port}`);
+    console.log(`Comunication_LTD (vulnerable) listening on :${port}`);
   });
 }

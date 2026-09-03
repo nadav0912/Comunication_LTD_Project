@@ -1,9 +1,8 @@
 'use strict';
 
-// Customer routes (SPEC.md §5.4, §9.4, §10.2). Authenticated only. The name is stored VERBATIM — no
-// input sanitisation (§13 Never: sanitising here would delete the stored-XSS demo).
-//
-// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+// Customer routes
+
+// !! INTENTIONALLY VULNERABLE !!
 // VULNERABLE build: GET ?search= concatenates the term into a LIKE clause via pool.query(), so
 // `' UNION SELECT id, username, password_hash, salt, ... FROM users -- ` leaks the users table.
 // The secure twin binds the term as a parameter. The name is still stored VERBATIM in both builds

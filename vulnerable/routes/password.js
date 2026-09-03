@@ -1,8 +1,8 @@
 'use strict';
 
-// Password routes (SPEC.md §5.2/§5.5, §9.2/§9.5): change-password (T10), forgot (T11), reset (T12).
+// Password routes: change-password, forgot, reset
 //
-// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+// !! INTENTIONALLY VULNERABLE !!
 // VULNERABLE build: the forgot (email) and reset (token) lookups concatenate user input into the SQL
 // via pool.query(). The secure twin binds them as parameters.
 
@@ -15,8 +15,8 @@ const mailer = require('../services/mailer');
 
 const router = express.Router();
 
-// POST /api/change-password (§9.2). Verify the current password (timing-safe), then apply the
-// shared policy+history+salt-rotation logic.
+// POST /api/change-password 
+// Verify the current password (timing-safe), then apply the shared policy+history+salt-rotation logic.
 router.post('/change-password', requireAuth, async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body ?? {};
@@ -41,16 +41,16 @@ router.post('/change-password', requireAuth, async (req, res, next) => {
   }
 });
 
-// POST /api/forgot (§9.5). Look up by email, issue sha1(randomBytes(20)) as reset_token with a
-// server-clock expiry, and email it (deviation D3: emailed value == stored value). Always returns
-// {ok:true} — it never reveals whether the email exists (no enumeration on this endpoint). If the
-// send fails, the just-issued token is cleared so nothing is left half-issued.
+// POST /api/forgot 
+// Look up by email, issue sha1(randomBytes(20)) as reset_token with a server-clock expiry, and email it.
+// Always returns {ok:true} so it never reveals whether the email exists (no enumeration on this endpoint). 
+// If the send fails, the just-issued token is cleared so nothing is left half-issued.
 router.post('/forgot', async (req, res, next) => {
   try {
     const { email } = req.body ?? {};
     if (!email) return res.status(400).json({ error: 'Email is required.' });
 
-    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !! (email concatenated into SQL)
+    // !! INTENTIONALLY VULNERABLE  !! (email concatenated into SQL)
     const [rows] = await pool.query(`SELECT id, email FROM users WHERE email = '${email}' LIMIT 1`);
     const user = rows[0];
 
@@ -76,10 +76,10 @@ router.post('/forgot', async (req, res, next) => {
   }
 });
 
-// POST /api/reset (§9.5). Match an unexpired token, apply the SAME policy+history+salt logic as
-// change-password (shared changePassword — not a second copy), then clear the token and unlock the
-// account (is_locked=0, failed_login_attempts=0), closing the U3 -> U6 loop. If the new password
-// fails policy/history the token is NOT consumed, so the user can retry.
+// POST /api/reset 
+// Match an unexpired token, apply the SAME policy+history+salt logic as change-password (shared changePassword and not a second copy), 
+// then clear the token and unlock the account (is_locked=0, failed_login_attempts=0).
+// If the new password fails policy/history the token is NOT consumed, so the user can retry.
 router.post('/reset', async (req, res, next) => {
   try {
     const { token, newPassword } = req.body ?? {};
@@ -87,7 +87,7 @@ router.post('/reset', async (req, res, next) => {
       return res.status(400).json({ error: 'Token and new password are required.' });
     }
 
-    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !! (token concatenated into SQL)
+    // !! INTENTIONALLY VULNERABLE !! (token concatenated into SQL)
     const [rows] = await pool.query(
       `SELECT id FROM users WHERE reset_token = '${token}' AND reset_token_expires > NOW() LIMIT 1`,
     );
