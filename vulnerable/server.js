@@ -2,8 +2,8 @@
 
 // Express application. Serves public/ statically and mounts a JSON API under
 // /api/*. There is no server-side templating — output encoding is entirely the client's job, which
-// is what the XSS demo turns on (see public/js/system.js). Exposed as a factory so tests mount the
-// app with supertest without opening a port.
+// is what the XSS demo turns on (see public/js/system.js). Exposed as a factory so the app can be
+// mounted without opening a port.
 
 require('dotenv').config();
 const path = require('path');

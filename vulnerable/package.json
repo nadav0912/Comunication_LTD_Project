@@ -1,7 +1,7 @@
 {
-  "name": "comunication-ltd-secure",
+  "name": "comunication-ltd-vulnerable",
   "version": "1.0.0",
-  "description": "Comunication_LTD secure information system",
+  "description": "Comunication_LTD information system (intentionally vulnerable build)",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -9,7 +9,6 @@
     "dev": "node --watch server.js",
     "db:init": "node scripts/init-db.js",
     "db:seed": "node scripts/seed.js",
-    "db:clean-tests": "node scripts/clean-tests.js",
     "preflight": "node scripts/preflight.js",
     "check:sql": "node scripts/check-sql.js",
     "lint": "npx eslint .",
@@ -23,7 +22,6 @@
     "nodemailer": "^6.9.14"
   },
   "devDependencies": {
-    "eslint": "^9.9.0",
-    "supertest": "^7.0.0"
+    "eslint": "^9.9.0"
   }
 }
