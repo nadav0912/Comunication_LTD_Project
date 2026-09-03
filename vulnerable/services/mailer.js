@@ -1,6 +1,6 @@
 'use strict';
 
-// Mail transport (SPEC.md §2, §9.5). One tiny interface — sendResetEmail(to, token) — so a transport
+// Mail transport. One tiny interface — sendResetEmail(to, token) — so a transport
 // swap (e.g. to Ethereal if Gmail is unavailable, risk R2) is a two-line change, and so tests can
 // stub this one function without touching SMTP. The transporter is created lazily so importing this
 // module never opens a connection.

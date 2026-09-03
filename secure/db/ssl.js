@@ -1,11 +1,11 @@
 'use strict';
 
-// Shared TLS config for every RDS connection (SPEC.md §3). rejectUnauthorized stays TRUE.
+// Shared TLS config for every RDS connection. rejectUnauthorized stays TRUE.
 //
 // AWS RDS server certificates are signed by Amazon RDS CAs that are NOT in Node's default trust
 // store, so the handshake fails with "self-signed certificate in certificate chain" unless we
 // supply the CA. We ship AWS's public global bundle (db/global-bundle.pem) and pass it as ssl.ca.
-// DB_SSL_CA overrides the path if needed. NEVER set rejectUnauthorized:false (SPEC §3, §13 Never).
+// DB_SSL_CA overrides the path if needed. NEVER set rejectUnauthorized:false.
 
 const fs = require('fs');
 const path = require('path');

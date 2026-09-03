@@ -1,8 +1,8 @@
 'use strict';
 
-// Password policy (SPEC.md §7). Enforced entirely server-side; client validation is UX only.
+// Password policy. Enforced entirely server-side, client validation is UX only.
 //
-// config.json is re-read on EVERY call (plan A5 — no mtime cache). The file is ~200 bytes, so a
+// config.json is re-read on EVERY call (no mtime cache). The file is ~200 bytes, so a
 // readFileSync per validation is free, and it removes a real flake: two writes inside one filesystem
 // timestamp tick would make an mtime cache serve stale policy and fail the A1 test intermittently.
 // The dictionary is static during a run, so it is loaded once.
@@ -15,7 +15,7 @@ const path = require('path');
 const CONFIG_PATH = path.join(__dirname, '..', 'config.json');
 const DICT_PATH = path.join(__dirname, '..', 'data', 'common-passwords.txt');
 
-// Special-character set per SPEC §7.
+// Special-character set.
 const SPECIALS = "!@#$%^&*()-_=+[]{};:'\",.<>/?\\|`~";
 
 const dictionary = loadDictionary();
@@ -31,8 +31,8 @@ function loadDictionary() {
   }
 }
 
-// Returns the current policy object, re-read from disk (plan A5). Also the accessor T8/T10 use for
-// maxLoginAttempts / historyCount.
+// Returns the current policy object, re-read from disk. 
+// Also the accessor use for maxLoginAttempts / historyCount.
 function policy() {
   return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 }

@@ -1,6 +1,6 @@
 'use strict';
 
-// Terminal error middleware (SPEC.md §8, SC13). The full stack is logged server-side; the client
+// Terminal error middleware. The full stack is logged server-side; the client
 // receives a generic JSON message with NO stack, SQL text, hash, or salt. Expected client errors
 // (validation, auth) are answered directly by their route with their own status/message and never
 // reach here — so anything that lands here is unexpected and is reported as a generic 500.
