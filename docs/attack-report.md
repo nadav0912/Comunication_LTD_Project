@@ -1,10 +1,10 @@
 # Attack Report — Comunication_LTD
 
-This report documents the two vulnerabilities the project demonstrates, per SPEC.md §10 and the
-course brief §6/§7. Each is shown **succeeding against the vulnerable build** (`:3001`,
-`vulnerable_app_db`) and **failing against the secure build** (`:3000`, `secure_app_db`). The two
-builds are byte-identical except for six files (`scripts/check-drift.sh` enforces this); the
-vulnerability lives entirely in those files.
+This report documents the two vulnerabilities the project demonstrates, per the course brief §6/§7.
+Each is shown **succeeding against the vulnerable build** (`:3001`, `vulnerable_app_db`) and
+**failing against the secure build** (`:3000`, `secure_app_db`). The two builds are byte-identical
+except for five files (`routes/auth.js`, `routes/password.js`, `routes/customers.js`,
+`public/js/system.js`, `.env.example`); the vulnerability lives entirely in those files.
 
 > **How to reproduce:** run both apps side by side —
 > `npm --prefix secure start` (→ :3000) and `npm --prefix vulnerable start` (→ :3001) — then follow
@@ -60,13 +60,11 @@ in **without knowing any password**.
 
 > **Browser note.** The login page trims the username client-side, which strips the trailing space
 > the `-- ` comment needs. In the **browser** use the equivalent `#` comment — `' OR '1'='1'#` —
-> which needs no space. The `-- ` form works at the API/`curl`/test level (no client trim), which is
-> what `secure/`+`vulnerable/` `tests/attacks.test.js` exercise.
+> which needs no space. The `-- ` form works at the API/`curl` level (no client trim).
 
 **Result.**
 - **Vulnerable `:3001`** → `200 OK`, session cookie set. *(screenshot: `screenshots/01-sqli-login-3001-success.png`)*
 - **Secure `:3000`** → `401 Unauthorized`. *(screenshot: `screenshots/02-sqli-login-3000-fail.png`)*
-- Proven in code: `vulnerable/tests/attacks.test.js` asserts `200`; `secure/tests/attacks.test.js` asserts `401`.
 
 **The fix (secure build).** Input is a bound parameter — it can never be parsed as SQL:
 ```js
@@ -144,8 +142,8 @@ hash to the HMAC of a password they know and then log in as that account.
 **Impact.** Account creation with attacker-controlled stored credentials/columns.
 
 **Result.**
-- **Vulnerable `:3001`** → the injected email + hash land in `users` (asserted by `vulnerable/tests/attacks.test.js`).
-- **Secure `:3000`** → the username is a bound parameter and is never parsed as SQL; nothing is injected (`secure/tests/attacks.test.js`).
+- **Vulnerable `:3001`** → the injected email + hash land in `users`.
+- **Secure `:3000`** → the username is a bound parameter and is never parsed as SQL; nothing is injected.
 
 **The fix (secure build).** Parameterized insert:
 ```js
@@ -206,8 +204,8 @@ li.innerHTML = customer.name;
 
 The registration and password forms validate on the client, but that is a **convenience only**. Every
 security decision — password policy, history, lockout, token validity, and the two vulnerabilities
-above — is enforced (or, in the vulnerable build, broken) **on the server**. The proof: the test suite
-and the payloads above call the API directly with `curl`/`supertest`, bypassing the browser entirely,
+above — is enforced (or, in the vulnerable build, broken) **on the server**. The proof: the payloads
+above call the API directly with `curl`, bypassing the browser entirely,
 and the server behaves identically. For example, a policy-violating password sent straight to the API
 is still rejected `400` by the secure build with no browser involved:
 ```
