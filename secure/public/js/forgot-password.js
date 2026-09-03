@@ -1,6 +1,6 @@
 'use strict';
 
-// Forgot-password page (SPEC.md §5.5). The response is intentionally the same whether or not the
+// Forgot-password page. The response is intentionally the same whether or not the
 // email exists, so the message here is generic — the server does not reveal account existence.
 (function () {
   const form = document.getElementById('forgot-form');

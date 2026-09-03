@@ -42,7 +42,7 @@ router.get('/customers', requireAuth, async (req, res, next) => {
     // Not trimmed (unlike secure): the raw term — including a trailing `-- ` comment — reaches SQL.
     const search = typeof req.query.search === 'string' ? req.query.search : '';
     if (search) {
-      // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !! (search term concatenated into SQL)
+      // !! INTENTIONALLY VULNERABLE !! (search term concatenated into SQL)
       const [rows] = await pool.query(
         `SELECT id, name, email, phone, sector, package, created_by, created_at FROM customers WHERE name LIKE '%${search}%' ORDER BY id DESC`,
       );

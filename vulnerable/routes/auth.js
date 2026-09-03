@@ -18,7 +18,7 @@ const router = express.Router();
 
 // POST /api/register . Validate policy -> salt -> HMAC -> insert user -> insert the SAME
 // (hash, salt) pair as the first password_history row, in one transaction so the invariant "one
-// history row per password" (plan A8) can never be left half-written.
+// history row per password" can never be left half-written.
 router.post('/register', async (req, res, next) => {
   try {
     const { username, email, password } = req.body ?? {};

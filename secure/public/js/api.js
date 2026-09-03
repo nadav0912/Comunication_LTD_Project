@@ -1,6 +1,6 @@
 'use strict';
 
-// Tiny fetch wrapper attached to window.api (plan A7 — plain <script>, no modules). Every request
+// Tiny fetch wrapper attached to window.api (plain <script>, no modules). Every request
 // is same-origin with credentials so the session cookie rides along. Server errors surface as a
 // thrown Error carrying { status, details } for the page to render.
 (function () {

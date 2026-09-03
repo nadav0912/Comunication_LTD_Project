@@ -1,6 +1,6 @@
 'use strict';
 
-// Remove leftover test fixtures from a crashed run (SPEC.md §3, plan risk R4b). Deletes ONLY rows
+// Remove leftover test fixtures from a crashed run. Deletes ONLY rows
 // whose username / customers.name begins with the `__test_` prefix, so demo and real data are never
 // touched. Reports the counts removed.
 

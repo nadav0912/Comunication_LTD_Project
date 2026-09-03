@@ -1,6 +1,6 @@
 'use strict';
 
-// Change-password page (SPEC.md §5.2). Server enforces the current-password check, the policy, and
+// Change-password page. Server enforces the current-password check, the policy, and
 // the reuse-history rule; the client only checks fields are non-empty and renders the server's
 // error list as text.
 (function () {

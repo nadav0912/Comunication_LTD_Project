@@ -1,6 +1,6 @@
 'use strict';
 
-// Login page (SPEC.md §5.3). On success the server sets the session cookie and we move to the
+// Login page. On success the server sets the session cookie and we move to the
 // system screen. The distinct "does not exist" vs "incorrect password" messages (deviation D1) come
 // straight from the server, rendered as text.
 (function () {

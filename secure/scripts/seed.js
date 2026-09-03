@@ -1,6 +1,6 @@
 'use strict';
 
-// Demo seed (SPEC.md §4; plan risk R8 escape hatch). Idempotent: it resets the demo user to a known,
+// Demo seed. Idempotent: it resets the demo user to a known,
 // unlocked state and a fixed set of customers on every run, so a locked/edited demo account is one
 // `npm run db:seed` away from clean. Prints the credentials it created. Never touches __test_ rows.
 

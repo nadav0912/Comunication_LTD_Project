@@ -1,6 +1,6 @@
--- Comunication_LTD schema — matches SPEC.md §6 verbatim.
+-- Comunication_LTD schema.
 -- Applied by scripts/init-db.js, which adds IF NOT EXISTS at runtime for idempotent re-runs
--- (this file stays the spec's canonical DDL). password_history.salt is deliberate (plan A8):
+-- (this file stays the spec's canonical DDL). password_history.salt is deliberate:
 -- one row per password, salt rotated on every change, so history verification is per row.
 
 CREATE TABLE users (

@@ -1,7 +1,7 @@
 'use strict';
 
-// Minimal ESLint 9 flat config (SPEC.md §2; §17 Q3 marks lint optional). No plugins, no extra deps.
-// Two environments: server/scripts/tests are CommonJS Node; public/js is browser <script> (plan A7).
+// Minimal ESLint 9 flat config. No plugins, no extra deps.
+// Two environments: server/scripts/tests are CommonJS Node; public/js is browser <script>.
 
 const nodeGlobals = {
   require: 'readonly', module: 'writable', exports: 'writable',

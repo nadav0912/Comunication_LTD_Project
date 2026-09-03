@@ -1,6 +1,6 @@
 'use strict';
 
-// Register page (SPEC.md §5.1). Client validation is convenience only: it checks fields are
+// Register page. Client validation is convenience only: it checks fields are
 // non-empty, then lets the SERVER enforce the real password policy and surface its error list
 // (§2 — client JS is trivially bypassed; the test suite proves enforcement is server-side).
 (function () {

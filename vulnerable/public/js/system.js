@@ -1,8 +1,8 @@
 'use strict';
 
-// System screen (SPEC.md §5.4, §9.4). *** THE XSS SINK LIVES HERE. ***
+// System screen. *** THE XSS SINK LIVES HERE. ***
 //
-// !! INTENTIONALLY VULNERABLE — see SPEC.md §10.1 !!
+// !! INTENTIONALLY VULNERABLE !!
 // VULNERABLE build: customer names are written with innerHTML, so a stored payload like
 // `<img src=x onerror="alert(document.cookie)">` is parsed as markup and EXECUTES — on submit and
 // again on every page load (proving it is stored, not reflected). The secure twin uses textContent.
@@ -22,7 +22,7 @@
   }
 
   function renderLast(customer) {
-    // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.1 !!
+    // !! INTENTIONALLY VULNERABLE !!
     // innerHTML parses the stored name as markup, so `<img src=x onerror=...>` executes. The secure
     // twin uses textContent. Storage is verbatim in both builds — the flaw lives here, at render.
     lastCustomer.innerHTML = customer.name;
@@ -33,7 +33,7 @@
     for (const customer of customers) {
       const li = document.createElement('li');
       li.className = 'list-group-item';
-      // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.1 !! (payload re-fires on every page load,
+      // !! INTENTIONALLY VULNERABLE !! (payload re-fires on every page load,
       // which is what proves the XSS is STORED, not reflected)
       li.innerHTML = customer.name;
       listEl.appendChild(li);

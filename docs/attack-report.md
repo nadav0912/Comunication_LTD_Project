@@ -76,7 +76,7 @@ const [rows] = await pool.execute(
 // …and the password is verified in application code with crypto.timingSafeEqual, not in SQL.
 ```
 ```js
-// vulnerable/routes/auth.js   // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.2 !!
+// vulnerable/routes/auth.js   // !! INTENTIONALLY VULNERABLE !!
 const [rows] = await pool.query(
   `SELECT id, salt, is_locked, failed_login_attempts FROM users WHERE username = '${username}'`,
 );
@@ -193,7 +193,7 @@ lastCustomer.textContent = customer.name;   // shown as inert text
 li.textContent = customer.name;
 ```
 ```js
-// vulnerable/public/js/system.js   // !! INTENTIONALLY VULNERABLE — see SPEC.md §10.1 !!
+// vulnerable/public/js/system.js   // !! INTENTIONALLY VULNERABLE !!
 lastCustomer.innerHTML = customer.name;     // parsed as markup -> executes
 li.innerHTML = customer.name;
 ```

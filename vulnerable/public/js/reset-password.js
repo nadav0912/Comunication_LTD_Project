@@ -1,6 +1,6 @@
 'use strict';
 
-// Reset-password page (SPEC.md §5.5). The user pastes the emailed token plus a new password; the
+// Reset-password page. The user pastes the emailed token plus a new password; the
 // server validates the token, policy, and history, then unlocks the account. Errors render as text.
 (function () {
   const form = document.getElementById('reset-form');

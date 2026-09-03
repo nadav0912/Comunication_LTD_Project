@@ -1,7 +1,7 @@
 'use strict';
 
-// Idempotent schema initialiser (SPEC.md §4, §6). Creates $DB_NAME if missing, then applies
-// db/schema.sql. Runs standalone via `npm run db:init`; live run is deferred to Checkpoint C′.
+// Idempotent schema initialiser. Creates $DB_NAME if missing, then applies
+// db/schema.sql. Runs standalone via `npm run db:init`.
 //
 // schema.sql is the spec's verbatim DDL (no IF NOT EXISTS); idempotency is added HERE by injecting
 // IF NOT EXISTS into each CREATE TABLE, so a second run is a no-op instead of ER_TABLE_EXISTS_ERROR.

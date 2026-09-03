@@ -1,7 +1,7 @@
 'use strict';
 
-// Preflight connectivity check (SPEC.md §4, §15). Written now, RUN JOINTLY with the developer at
-// Checkpoint C′ — it turns the live-connection session into one command instead of an afternoon of
+// Preflight connectivity check. Run it before the first live session — it turns
+// connecting to RDS + Gmail into one command instead of an afternoon of
 // guessing. Proves two things and nothing else: the RDS TLS handshake + a trivial query, and that
 // Gmail SMTP will accept the credentials. It NEVER prints DB_PASSWORD or SMTP_PASS (T1 criterion),
 // including anything a driver may have embedded in an error message — see redact().

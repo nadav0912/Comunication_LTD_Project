@@ -1,6 +1,6 @@
 'use strict';
 
-// SC14 static check (SPEC.md §16). The secure build must never interpolate into a SQL string — every
+// SC14 static check. The secure build must never interpolate into a SQL string — every
 // query uses bound parameters. This scans secure/routes/ and fails if any template interpolation
 // ("dollar-brace") appears there, mirroring `git grep` but runnable via `npm run check:sql`.
 

@@ -1,6 +1,6 @@
 'use strict';
 
-// System screen (SPEC.md §5.4, §9.4). *** THE XSS SINK LIVES HERE. ***
+// System screen. *** THE XSS SINK LIVES HERE. ***
 //
 // SECURE build: customer names are written with textContent, so a payload like
 // `<img src=x onerror="alert(document.cookie)">` renders as visible, inert TEXT — never parsed as
